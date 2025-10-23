@@ -317,6 +317,90 @@ class SceneNode {
         return localMatrix;
     }
 }
+// ✅ TAMBAHKAN FUNGSI ROTATION YANG HILANG
+function rotateAroundArbitraryAxis(point, axis, angle) {
+    const [x, y, z] = point;
+    const [ax, ay, az] = normalizeVector(axis);
+    
+    const cosA = Math.cos(angle);
+    const sinA = Math.sin(angle);
+    const oneMinusCosA = 1 - cosA;
+    
+    const rotationMatrix = [
+        cosA + ax*ax*oneMinusCosA,     ax*ay*oneMinusCosA - az*sinA, ax*az*oneMinusCosA + ay*sinA,
+        ay*ax*oneMinusCosA + az*sinA, cosA + ay*ay*oneMinusCosA,     ay*az*oneMinusCosA - ax*sinA,
+        az*ax*oneMinusCosA - ay*sinA, az*ay*oneMinusCosA + ax*sinA, cosA + az*az*oneMinusCosA
+    ];
+    
+    const newX = x * rotationMatrix[0] + y * rotationMatrix[1] + z * rotationMatrix[2];
+    const newY = x * rotationMatrix[3] + y * rotationMatrix[4] + z * rotationMatrix[5];
+    const newZ = x * rotationMatrix[6] + y * rotationMatrix[7] + z * rotationMatrix[8];
+    
+    return [newX, newY, newZ];
+}
+
+function normalizeVector(v) {
+    const [x, y, z] = v;
+    const len = Math.sqrt(x*x + y*y + z*z);
+    if (len === 0) return [0, 0, 0];
+    return [x/len, y/len, z/len];
+}
+
+// ✅ PERBAIKI FUNGSI UPDATE POISON GAS
+function updatePoisonGasStream(now, mouthNode) {
+    // Arbitrary axis: diagonal keluar dari mulut (miring ke kanan-atas-depan)
+    const streamAxis = [0., 0., 5]; 
+    
+    // Cari gas particles (children setelah fangs)
+    mouthNode.children.forEach((child, index) => {
+        // Skip fangs (index 0 dan 1 adalah fang)
+        if (index >= 2) {
+            const particle = child;
+            const particleIndex = index - 2;
+            
+            // Stream keluar dari mulut
+            const streamSpeed = 1;
+            const time = now * streamSpeed - particleIndex * 0.001; // Delay per partikel
+            
+            // Base position: spiral keluar
+            const angle = time * 3 + particleIndex * 0.5;
+            const distance = particleIndex * 1 + (time % 3.0); // Makin jauh makin ke depan
+            const spiralRadius = 0.3 + particleIndex * 0.1; // Makin lebar
+            
+            const streamX = Math.cos(angle) * spiralRadius;
+            const streamY = Math.sin(angle) * spiralRadius * 0.5; // Lebih flat vertikal
+            const streamZ = distance; // Keluar ke depan (Z positif)
+            
+            // Rotate pada arbitrary axis untuk efek stream miring
+            const rotatedPos = rotateAroundArbitraryAxis(
+                [streamX, streamY, streamZ],
+                streamAxis,
+                angle * 0.3
+            );
+            
+            particle.localTransform.position[0] = rotatedPos[0];
+            particle.localTransform.position[1] = rotatedPos[1];
+            particle.localTransform.position[2] = rotatedPos[2];
+            
+            // Rotasi partikel sendiri
+            particle.localTransform.rotation[0] = angle * 2;
+            particle.localTransform.rotation[1] = angle * 1.5;
+            
+            // Fade out semakin jauh
+            const fadeDistance = distance / 2.0;
+            particle.color[3] = Math.max(0.1, 0.8 - fadeDistance);
+            
+            // Scale mengecil semakin jauh (dispersi gas)
+            const scaleBase = 0.5;
+            const scaleFactor = 1.0 + particleIndex * 0.15;
+            particle.localTransform.scale[0] = scaleBase * scaleFactor;
+            particle.localTransform.scale[1] = scaleBase * scaleFactor;
+            particle.localTransform.scale[2] = scaleBase * scaleFactor;
+        }
+    });
+}
+
+
 
 function main() {
     const canvas = document.querySelector("#glcanvas");
@@ -486,13 +570,27 @@ function main() {
     });
     mouth.addChild(Rightfang);
 
-    
+
+    for (let i = 0; i < 5; i++) {
+        const gasParticle = new SceneNode({
+            buffers: gasAuraBuffers, // Gunakan buffer gas aura yang sama
+            localTransform: {
+                position: [0, 0, 0], // Awalnya di dalam mulut
+                rotation: [0, 0, 0],
+                scale: [0.01, 0.01, 0.01]
+            },
+            color: [0.52, 0.32, 0.62, 0.15],
+            isGlowing: true,
+            isTransparent: true
+        });
+        mouth.addChild(gasParticle);
+    }
 
     // Eyes (children of body)
     const leftEye = new SceneNode({
         buffers: eyeBuffers,
         localTransform: {
-            position: [-0.6, 0.2, 0.95],
+            position: [-0.6, 0.2, 0.89],
             rotation: [3, 0.2, 0.7],
             scale: [4, 4, 0.1]
         },
@@ -517,7 +615,7 @@ function main() {
     const rightEye = new SceneNode({
         buffers: eyeBuffers,
         localTransform: {
-            position: [0.6, 0.2, 0.95],
+            position: [0.6, 0.2, 0.89],
             rotation: [3, -0.2, -0.7],
             scale: [4, 4, 0.1]
         },
@@ -655,6 +753,9 @@ function main() {
     // Gas aura rotation
     const gasRotateSpeed = 0.5;
     gasAuraNode.localTransform.rotation[1] = now * gasRotateSpeed;
+
+
+        updatePoisonGasStream(now, mouth);
 
     // Small gas particles animation
     body.children.forEach((child, index) => {
