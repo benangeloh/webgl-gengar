@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Haunter WebGL Project</title>
+    <style>
+        body { 
+            margin: 0; 
+            background-color: #d9d9d9; 
+            overflow: hidden;
+        }
+        canvas { 
+            display: block; 
+            width: 100vw; 
+            height: 100vh; 
+            cursor: grab;
+        }
+        canvas:active {
+            cursor: grabbing;
+        }
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #333;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            background: rgba(255,255,255,0.6);
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="glcanvas"></canvas>
+    <script src="https://cdn.jsdelivr.net/npm/gl-matrix@3.4.3/dist/gl-matrix-min.js"></script>
+    <script src="haunter.js"></script>
+</body>
+</html>
