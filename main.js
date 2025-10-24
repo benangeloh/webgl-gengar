@@ -570,194 +570,351 @@ function createGastlyNode(buffers) {
 // ============================================
 // HAUNTER BUILDER
 // ============================================
-function createHaunterNode(buffers) { // Takes the main buffers object
+const haunterEyeScaleFactor = 1.4;
+const haunterSpikeColor = [0.557, 0.471, 0.710, 1.0];
 
-    const haunterRootNode = new SceneNode(); // Main node for Haunter's transforms (like flip)
+const haunterHeadSpikes = [
+    { pos: [-0.6, 0.5, -0.2],  rot: [0, -Math.PI / 6, Math.PI / 5], scale: [4, 4, 4] },
+    { pos: [-0.85, 0.1, -0.2], rot: [0, -Math.PI / 7, Math.PI / 3], scale: [2.5, 2.5, 2.5] },
+    { pos: [-0.9, -0.2, -0.15], rot: [0, -Math.PI / 8, Math.PI / 2], scale: [1.5, 1.5, 1.5] },
+    { pos: [0.6, 0.5, -0.2],   rot: [0, Math.PI / 6, -Math.PI / 5], scale: [4, 4, 4] },
+    { pos: [0.85, 0.1, -0.2],  rot: [0, Math.PI / 7, -Math.PI / 3], scale: [2.5, 2.5, 2.5] },
+    { pos: [0.9, -0.2, -0.15],  rot: [0, Math.PI / 8, -Math.PI / 2], scale: [1.5, 1.5, 1.5] },
+];
 
-    const headNode = new SceneNode({
-        buffers: buffers.haunterHead, // Use buffer from object
-        localTransform: { position: [0, -0.2, 0], rotation: [0,0,0], scale: [1.05, 1.1, 1.1] },
-        color: [0.557, 0.471, 0.710, 1.0]
-    });
-    haunterRootNode.addChild(headNode);
+const haunterTailSpikes = [
+    { pos: [0, -0.8, -1], rot: [-Math.PI * 0.5, 0, 0], scale: [1.2, 1.2, 1.2] },
+    { pos: [0, -0.95, -0.85], rot: [-Math.PI * 0.68, 0, 0], scale: [1.2, 1.2, 1.2] },
+];
 
-    const tailNode = new SceneNode({
-        buffers: buffers.haunterTail, // Use buffer from object
-        localTransform: { 
-            position: [0, -0.7, -0.65], 
-            rotation: [-115 * Math.PI / 180, Math.PI / 18, 0], 
-            scale: [1.4, 1, 1.25]
-        },
-        color: [0.557, 0.471, 0.710, 1.0]
-    });
-    headNode.addChild(tailNode);
+const haunterFingerData = [ 
+    { pos: [-0.25, 0.05, 0.5], rot: [0.9, 0.5, 0], scale: [0.25, 0.315, 0.25] },
+    { pos: [0, 0.15, 0.55],   rot: [1.1, 0, 0],    scale: [0.25, 0.26, 0.22] },
+    { pos: [0.25, 0.05, 0.5],  rot: [0.9, -0.5, 0], scale: [0.25, 0.315, 0.25] },
+    { pos: [-0.25, 0.1, 0.95], rot: [-0.9, 0.5, 0], scale: [0.2, 0.27, 0.2] },
+    { pos: [0, 0.15, 1.1],   rot: [-1.1, 0, 0],    scale: [0.2, 0.315, 0.2] },
+    { pos: [0.25, 0.05, 0.95],  rot: [-0.9, -0.5, 0], scale: [0.2, 0.27, 0.2] }
+];
 
-    const eyeScaleFactor = 1.4; // Keep this constant defined here
+const haunterTopTeethCurve = [
+    [-0.7, 0.17, -0.28], 
+    [-0.2, 0.17, 0.1],
+    [0.2, 0.17, 0.1],
+    [0.7, 0.17, -0.28]
+];
+const haunterBottomTeethCurve = [
+    [-0.5, 0.23, -0.15],
+    [-0.4, -0.25, 0.07],
+    [0.4, -0.25, 0.07],
+    [0.5, 0.23, -0.15]
+];
 
-    // Left Eye Black Background
-    const leftEyeWhite = new SceneNode({
-        buffers: buffers.haunterEye, // Use buffer from object
-        localTransform: { position: [-0.33, 0.364, 0.86], rotation: [-0.4, -0.3, -3.79], scale: [0.480 * eyeScaleFactor, 0.835 * eyeScaleFactor, 0.08 * eyeScaleFactor] },
-        color: [0.0, 0.0, 0.0, 1.0]
-    });
-    headNode.addChild(leftEyeWhite);
+function createHaunterNode(buffers) { // Mengambil object buffers
 
-    // Left Eye White Outline/Shape
-    const leftEyeOutline = new SceneNode({
-        buffers: buffers.haunterEye, // Use buffer from object
-        localTransform: { position: [-0.33, 0.365, 0.865], rotation: [-0.4, -0.3, -3.8], scale: [0.465 * eyeScaleFactor, 0.788 * eyeScaleFactor, 0.1 * eyeScaleFactor] },
-        color: [1.0, 1.0, 1.0, 1.0]
-    });
-    headNode.addChild(leftEyeOutline);
+    const haunterRootNode = new SceneNode(); // Node utama untuk transformasi Haunter (misal, salto)
 
-    // Right Eye White Shape/Outline
-    const rightEyeWhite = new SceneNode({
-        buffers: buffers.haunterEye, // Use buffer from object
-        localTransform: { position: [0.33, 0.365, 0.86], rotation: [-0.4, 0.3, 3.8], scale: [0.465 * eyeScaleFactor, 0.788 * eyeScaleFactor, 0.1 * eyeScaleFactor] },
-        color: [1.0, 1.0, 1.0, 1.0]
-    });
-    headNode.addChild(rightEyeWhite);
+    const headNode = new SceneNode({
+        buffers: buffers.haunterHead,
+        localTransform: { position: [0, -0.2, 0], rotation: [0,0,0], scale: [1.2, 1.05, 1.2] },
+        color: [0.557, 0.471, 0.710, 1.0]
+    });
+    haunterRootNode.addChild(headNode);
 
-    // Right Eye Black Background
-    headNode.addChild(new SceneNode({
-        buffers: buffers.haunterEye, // Use buffer from object
-        localTransform: { position: [0.33, 0.364, 0.86], rotation: [-0.4, 0.3, 3.79], scale: [0.480 * eyeScaleFactor, 0.835 * eyeScaleFactor, 0.08 * eyeScaleFactor] },
-        color: [0.0, 0.0, 0.0, 1.0]
-    }));
+    const tailNode = new SceneNode({
+        buffers: buffers.haunterTail,
+        localTransform: { 
+            position: [0, -0.7, -0.65], 
+            rotation: [-115 * Math.PI / 180, Math.PI / 18, 0], 
+            scale: [1.4, 1, 1.25]
+        },
+        color: [0.557, 0.471, 0.710, 1.0]
+    });
+    headNode.addChild(tailNode);
 
-    // Pupil colors
-    const innerPupilColor = [0.8, 0.8, 0.8, 1.0];
-    const outerPupilColor = [0.2, 0.2, 0.1, 1.0];
+    // Left Eye Black Background
+    const leftEyeWhite = new SceneNode({
+        buffers: buffers.haunterEye,
+        localTransform: {
+            position: [-0.33, 0.364, 0.86],
+            rotation: [-0.4, -0.3, -3.79],
+            scale: [0.480 * haunterEyeScaleFactor, 0.835 * haunterEyeScaleFactor, 0.08 * haunterEyeScaleFactor]
+        },
+        color: [0.0, 0.0, 0.0, 1.0]
+    });
+    headNode.addChild(leftEyeWhite);
 
-    // Left Outer Pupil
-    headNode.addChild(new SceneNode({
-        buffers: buffers.haunterPupil, // Use buffer from object
-        localTransform: { position: [-0.26, 0.379, 0.92], rotation: [-1, 2 , 4], scale: [0.2 * eyeScaleFactor, 3 * eyeScaleFactor, 1 * eyeScaleFactor] },
-        color: outerPupilColor
-    }));
+    // Left Eye White Outline/Shape
+    const leftEyeOutline = new SceneNode({
+        buffers: buffers.haunterEye,
+        localTransform: {
+            position: [-0.33, 0.365, 0.865],
+            rotation: [-0.4, -0.3, -3.8],
+            scale: [0.465 * haunterEyeScaleFactor, 0.788 * haunterEyeScaleFactor, 0.1 * haunterEyeScaleFactor]
+        },
+        color: [1.0, 1.0, 1.0, 1.0]
+    });
+    headNode.addChild(leftEyeOutline);
 
-    // Right Outer Pupil
-    headNode.addChild(new SceneNode({
-        buffers: buffers.haunterPupil, // Use buffer from object
-        localTransform: { position: [0.26, 0.379, 0.91], rotation: [-1, 1, 4], scale: [0.2 * eyeScaleFactor, 3 * eyeScaleFactor, 1 * eyeScaleFactor] },
-        color: outerPupilColor
-    }));
-        
-    // Spikes - Using a single cone buffer for simplicity
-    const spikeColor = [0.557, 0.471, 0.710, 1.0];
-    const spikeBuffer = buffers.haunterTooth; // Reuse tooth buffer or create a dedicated spike buffer if different
+    // Right Eye White Shape/Outline
+    const rightEyeWhite = new SceneNode({
+            buffers: buffers.haunterEye,
+            localTransform: {
+                position: [0.33, 0.365, 0.86],
+                rotation: [-0.4, 0.3, 3.8],
+                scale: [0.465  * haunterEyeScaleFactor, 0.788 * haunterEyeScaleFactor, 0.1 * haunterEyeScaleFactor]
+            },
+            color: [1.0, 1.0, 1.0, 1.0]
+        });
+        headNode.addChild(rightEyeWhite);
 
-    const headSpikes = [
-        { pos: [-0.6, 0.5, -0.2],  rot: [0, -Math.PI / 6, Math.PI / 5], scale: [4, 4, 4] },
-        { pos: [-0.85, 0.1, -0.2], rot: [0, -Math.PI / 7, Math.PI / 3], scale: [2.5, 2.5, 2.5] },
-        { pos: [-0.9, -0.2, -0.15], rot: [0, -Math.PI / 8, Math.PI / 2], scale: [1.5, 1.5, 1.5] },
-        { pos: [0.6, 0.5, -0.2],   rot: [0, Math.PI / 6, -Math.PI / 5], scale: [4, 4, 4] },
-        { pos: [0.85, 0.1, -0.2],  rot: [0, Math.PI / 7, -Math.PI / 3], scale: [2.5, 2.5, 2.5] },
-        { pos: [0.9, -0.2, -0.15],  rot: [0, Math.PI / 8, -Math.PI / 2], scale: [1.5, 1.5, 1.5] },
-    ];
-    for (const s of headSpikes) {
-        headNode.addChild(new SceneNode({
-            buffers: spikeBuffer, // Use the selected buffer
-            localTransform: { position: s.pos, rotation: s.rot, scale: s.scale },
-            color: spikeColor,
-        }));
-    }
+    // Right Eye Black Background
+    headNode.addChild(new SceneNode({
+            buffers: buffers.haunterEye,
+            localTransform: {
+                position: [0.33, 0.364, 0.86],
+                rotation: [-0.4, 0.3, 3.79],
+                scale: [0.480 * haunterEyeScaleFactor, 0.835 * haunterEyeScaleFactor, 0.08 * haunterEyeScaleFactor]
+            },
+            color: [0.0, 0.0, 0.0, 1.0]
+        }));
 
-    const tailSpikes = [
-        { pos: [0, -0.8, -1], rot: [-Math.PI * 0.5, 0, 0], scale: [1.2, 1.2, 1.2] },
-        { pos: [0, -0.95, -0.85], rot: [-Math.PI * 0.68, 0, 0], scale: [1.2, 1.2, 1.2] },
-    ];
-    for (const s of tailSpikes) {
-         headNode.addChild(new SceneNode({ // Adding to headNode based on original code
-            buffers: spikeBuffer, // Use the selected buffer
-            localTransform: { position: s.pos, rotation: s.rot, scale: s.scale },
-            color: spikeColor,
-        }));
-    }
+    // Pupil colors
+    const innerPupilColor = [0.8, 0.8, 0.8, 1.0];
+    const outerPupilColor = [0.2, 0.2, 0.1, 1.0];
 
-    // Left Hand hierarchy
-    const leftHandNode = new SceneNode({
-        localTransform: { position: [-1.3, -0.5, 0.5], rotation: [Math.PI / 2, Math.PI / 8, 0], scale: [0.7, 0.7, 0.7] }
-    });
-    haunterRootNode.addChild(leftHandNode);
+    // Left Inner Pupil
+    headNode.addChild(new SceneNode({
+            buffers: buffers.haunterPupil,
+            localTransform: {
+                position: [-0.2625, 0.39, 0.98],
+                rotation: [-1.2, -1.5, -3.85],
+                scale: [0.013 * haunterEyeScaleFactor, 0.183 * haunterEyeScaleFactor, 0.025 * haunterEyeScaleFactor]
+            },
+            color: innerPupilColor
+        }));
 
-    const armNodeLeft = new SceneNode({ buffers: buffers.haunterArm, localTransform: { position: [0, -0.1, 0], rotation: [0, 0, 0.1], scale: [0.6, 0.4, 0.6] }, color: spikeColor });
-    leftHandNode.addChild(armNodeLeft);
+    // Left Outer Pupil
+    headNode.addChild(new SceneNode({
+            buffers: buffers.haunterPupil,
+            localTransform: {
+                position: [-0.26, 0.379, 0.92],
+                rotation: [-1, 2 , 4],
+                scale: [0.2 * haunterEyeScaleFactor, 3 * haunterEyeScaleFactor, 1 * haunterEyeScaleFactor]
+            },
+            color: outerPupilColor
+        }));
 
-    const palmGroupNodeLeft = new SceneNode({ localTransform: { position: [0, 0.2, 0], rotation: [-Math.PI / 2, 0, 0], scale: [0.9, 0.7, 0.9] } });
-    leftHandNode.addChild(palmGroupNodeLeft);
+    // Right Inner Pupil
+    headNode.addChild(new SceneNode({
+            buffers: buffers.haunterPupil,
+            localTransform: {
+                position: [0.2625, 0.39, 0.98],
+                rotation: [-1.2, 1.5, 3.85],
+                scale: [0.013 * haunterEyeScaleFactor, 0.183 * haunterEyeScaleFactor, 0.025 * haunterEyeScaleFactor]
+            },
+            color: innerPupilColor
+        }));
 
-    const palmNodeLeft = new SceneNode({ buffers: buffers.haunterPalm, localTransform: { position: [0, 0, 0], rotation: [0, 0, 0], scale: [0.6, 0.5, 0.6] }, color: spikeColor });
-    palmGroupNodeLeft.addChild(palmNodeLeft);
+    // Right Outer Pupil
+    headNode.addChild(new SceneNode({
+            buffers: buffers.haunterPupil,
+            localTransform: {
+                position: [0.26, 0.379, 0.91],
+                rotation: [-1, 1, 4],
+                scale: [0.2 * haunterEyeScaleFactor, 3 * haunterEyeScaleFactor, 1 * haunterEyeScaleFactor]
+            },
+            color: outerPupilColor
+        }));
+        
 
-    const fingerData = [ /* ... finger data ... */ ]; // Assuming fingerData is defined globally or passed in
-    for (const data of fingerData) {
-        const fingerBase = new SceneNode({ buffers: buffers.haunterFingerBase, localTransform: { position: data.pos, rotation: data.rot, scale: data.scale }, color: spikeColor });
-        palmNodeLeft.addChild(fingerBase); 
-        const fingerMiddle = new SceneNode({ buffers: buffers.haunterFingerBase, localTransform: { position: [0, 0.75, 0], rotation: [Math.PI, 0, 0], scale: [0.8, 0.7, 0.8] }, color: spikeColor });
-        fingerBase.addChild(fingerMiddle);
-        const fingerTip = new SceneNode({ buffers: buffers.haunterFingerTip, localTransform: { position: [0, -0.8, 0], rotation: [Math.PI, 0, 0], scale: [0.8, 0.6, 0.8] }, color: spikeColor });
-        fingerBase.addChild(fingerTip);
-    }
+    // Loop Paku (Spikes)
+    for (const s of haunterHeadSpikes) { 
+        headNode.addChild(new SceneNode({
+            buffers: buffers.haunterTooth, 
+            localTransform: { position: s.pos, rotation: s.rot, scale: s.scale },
+            color: haunterSpikeColor 
+        }));
+    }
 
-    // Right Hand hierarchy
-    const rightHandNode = new SceneNode({
-        localTransform: { position: [1.3, -0.5, 0.5], rotation: [Math.PI / 2, -Math.PI / 8, 0], scale: [0.7, 0.7, 0.7] }
-    });
-    haunterRootNode.addChild(rightHandNode);
+    for (const s of haunterTailSpikes) {
+        headNode.addChild(new SceneNode({
+            buffers: buffers.haunterTooth, 
+            localTransform: { position: s.pos, rotation: s.rot, scale: s.scale },
+            color: haunterSpikeColor 
+        }));
+    }
 
-    const armNodeRight = new SceneNode({ buffers: buffers.haunterArm, localTransform: { position: [0, -0.1, 0], rotation: [0, 0, -0.1], scale: [0.6, 0.4, 0.6] }, color: spikeColor });
-    rightHandNode.addChild(armNodeRight);
+    // Left Hand hierarchy
+    const leftHandNode = new SceneNode({
+        localTransform: {
+            position: [-1.3, -0.5, 0.5],
+            rotation: [Math.PI / 2, Math.PI / 8, 0],
+            scale: [0.7, 0.7, 0.7]
+        }
+    });
+    haunterRootNode.addChild(leftHandNode);
 
-    const palmGroupNodeRight = new SceneNode({ localTransform: { position: [0, 0.2, 0], rotation: [-Math.PI / 2, 0, 0], scale: [0.9, 0.7, 0.9] } });
-    rightHandNode.addChild(palmGroupNodeRight);
+    const armNodeLeft = new SceneNode({
+        buffers: buffers.haunterArm,
+        localTransform: { position: [0, -0.1, 0], rotation: [0, 0, 0.1], scale: [0.6, 0.4, 0.6] },
+        color: haunterSpikeColor
+    });
+    leftHandNode.addChild(armNodeLeft);
 
-    const palmNodeRight = new SceneNode({ buffers: buffers.haunterPalm, localTransform: { position: [0, 0, 0], rotation: [0, 0, 0], scale: [0.6, 0.5, 0.6] }, color: spikeColor });
-    palmGroupNodeRight.addChild(palmNodeRight);
+    const palmGroupNodeLeft = new SceneNode({
+        localTransform: { position: [0, 0.2, 0], rotation: [-Math.PI / 2, 0, 0], scale: [0.9, 0.7, 0.9] }
+    });
+    leftHandNode.addChild(palmGroupNodeLeft);
 
-    for (const data of fingerData) {
-        const fingerBase = new SceneNode({ buffers: buffers.haunterFingerBase, localTransform: { position: data.pos, rotation: data.rot, scale: data.scale }, color: spikeColor });
-        palmNodeRight.addChild(fingerBase);
-        const fingerMiddle = new SceneNode({ buffers: buffers.haunterFingerBase, localTransform: { position: [0, 0.75, 0], rotation: [Math.PI, 0, 0], scale: [0.8, 0.7, 0.8] }, color: spikeColor });
-        fingerBase.addChild(fingerMiddle);
-        const fingerTip = new SceneNode({ buffers: buffers.haunterFingerTip, localTransform: { position: [0, -0.8, 0], rotation: [Math.PI, 0, 0], scale: [0.8, 0.6, 0.8] }, color: spikeColor });
-        fingerBase.addChild(fingerTip);
-    }
+    const palmNodeLeft = new SceneNode({
+        buffers: buffers.haunterPalm,
+        localTransform: { position: [0, 0, 0], rotation: [0, 0, 0], scale: [0.6, 0.5, 0.6] },
+        color: haunterSpikeColor
+    });
+    palmGroupNodeLeft.addChild(palmNodeLeft);
 
-    // Mouth node
-    const mouthNode = new SceneNode({ buffers: buffers.haunterMouth, localTransform: { position: [0, -0.1, 0.99], rotation: [0.1, 0, 0], scale: [0.9, 0.7, 0.7] }, color: [0.8, 0.4, 0.5, 1.0] });
-    headNode.addChild(mouthNode);
+    for (const data of haunterFingerData) {
+        const fingerBase = new SceneNode({
+            buffers: buffers.haunterFingerBase,
+            localTransform: { position: data.pos, rotation: data.rot, scale: data.scale },
+            color: haunterSpikeColor
+        });
+        palmNodeLeft.addChild(fingerBase); 
 
-    // Teeth data and loops
-    const topTeethCurve = [ [-0.7, 0.17, -0.28], [-0.2, 0.17, 0.1], [0.2, 0.17, 0.1], [0.7, 0.17, -0.28] ];
-    const bottomTeethCurve = [ [-0.5, 0.23, -0.15], [-0.4, -0.25, 0.07], [0.4, -0.25, 0.07], [0.5, 0.23, -0.15] ];
-    const topTeethCount = 4;
-    const allTeeth = []; // Store teeth references for animation
+        const fingerMiddle = new SceneNode({
+            buffers: buffers.haunterFingerBase,
+            localTransform: {
+                position: [0, 0.75, 0],   
+                rotation: [Math.PI, 0, 0], 
+                scale: [0.8, 0.7, 0.8]
+            },
+            color: haunterSpikeColor
+        });
+        fingerBase.addChild(fingerMiddle);
 
-    for (let i = 0; i < topTeethCount; i++) {
-        const t_val = (i + 1) / (topTeethCount + 1); 
-        const bezierPos = bezier(t_val, ...topTeethCurve); // Assuming bezier is defined globally or passed in
-        
-        const toothNode = new SceneNode({ buffers: buffers.haunterTooth, localTransform: { position: bezierPos, rotation: [-0.5, 0.5, Math.PI], scale: [1, 1, 1] }, color: [0.557, 0.471, 0.710, 1.0] });
-        mouthNode.addChild(toothNode);
-        allTeeth.push(toothNode); // Add for animation
-    }
+        const fingerTip = new SceneNode({
+            buffers: buffers.haunterFingerTip,
+            localTransform: {
+                position: [0, -0.8, 0], 
+                rotation: [Math.PI, 0, 0],
+                scale: [0.8, 0.6, 0.8]
+            },
+            color: haunterSpikeColor
+        });
+        fingerBase.addChild(fingerTip);
+    }
 
-    const bottomTeethCount = 6;
-    for (let i = 0; i < bottomTeethCount; i++) {
-        const t_val = 0.2 + (i * 0.12);
-        const bezierPos = bezier(t_val, ...bottomTeethCurve); // Assuming bezier is defined
+    const rightHandNode = new SceneNode({
+        localTransform: {
+            position: [1.3, -0.5, 0.5],
+            rotation: [Math.PI / 2, -Math.PI / 8, 0],
+            scale: [0.7, 0.7, 0.7]
+        }
+    });
+    haunterRootNode.addChild(rightHandNode);
 
-        const toothNode = new SceneNode({ buffers: buffers.haunterTooth, localTransform: { position: bezierPos, rotation: [0.3, 0, 0], scale: [0.8, 0.8, 0.8] }, color: [0.557, 0.471, 0.710, 1.0] });
-        mouthNode.addChild(toothNode); 
-        allTeeth.push(toothNode); // Add for animation
-    }
+    const armNodeRight = new SceneNode({
+        buffers: buffers.haunterArm,
+        localTransform: { position: [0, -0.1, 0], rotation: [0, 0, -0.1], scale: [0.6, 0.4, 0.6] },
+        color: haunterSpikeColor
+    });
+    rightHandNode.addChild(armNodeRight);
 
-    // Return the main node and references for animation
-    return {
-        modelRoot: haunterRootNode, // The node to add to the main scene
-        allTeeth: allTeeth         // Array of teeth nodes for animation
-    };
+    const palmGroupNodeRight = new SceneNode({
+        localTransform: { position: [0, 0.2, 0], rotation: [-Math.PI / 2, 0, 0], scale: [0.9, 0.7, 0.9] }
+    });
+    rightHandNode.addChild(palmGroupNodeRight);
+
+    const palmNodeRight = new SceneNode({
+        buffers: buffers.haunterPalm,
+        localTransform: { position: [0, 0, 0], rotation: [0, 0, 0], scale: [0.6, 0.5, 0.6] },
+        color: haunterSpikeColor
+    });
+    palmGroupNodeRight.addChild(palmNodeRight);
+
+    for (const data of haunterFingerData) { 
+        const fingerBase = new SceneNode({
+            buffers: buffers.haunterFingerBase,
+            localTransform: { position: data.pos, rotation: data.rot, scale: data.scale },
+            color: haunterSpikeColor
+        });
+        palmNodeRight.addChild(fingerBase);
+
+        const fingerMiddle = new SceneNode({
+            buffers: buffers.haunterFingerBase,
+            localTransform: { position: [0, 0.75, 0], rotation: [Math.PI, 0, 0], scale: [0.8, 0.7, 0.8] },
+            color: haunterSpikeColor
+        });
+        fingerBase.addChild(fingerMiddle);
+
+        const fingerTip = new SceneNode({
+            buffers: buffers.haunterFingerTip,
+            localTransform: {
+                position: [0, -0.8, 0],
+                rotation: [Math.PI, 0, 0],
+                scale: [0.8, 0.6, 0.8]
+            },
+            color: haunterSpikeColor
+        });
+        fingerBase.addChild(fingerTip);
+    }
+
+    const mouthNode = new SceneNode({
+        buffers: buffers.haunterMouth,
+        localTransform: {
+            position: [0, -0.1, 0.99], 
+            rotation: [0.1, 0, 0],
+            scale: [0.9, 0.7, 0.7]      
+        },
+        color: [0.8, 0.4, 0.5, 1.0] 
+    });
+    headNode.addChild(mouthNode);
+
+    const allTeeth = []; // Store teeth references for animation
+
+    const topTeethCount = 4;
+    for (let i = 0; i < topTeethCount; i++) {
+        const t_val = (i + 1) / (topTeethCount + 1); 
+        const bezierPos = bezier(t_val, ...haunterTopTeethCurve); 
+        
+        const toothNode = new SceneNode({
+            buffers: buffers.haunterTooth,
+            localTransform: {
+                position: bezierPos,
+                rotation: [-0.5, 0.5, Math.PI], 
+                scale: [1, 1, 1]
+            },
+            color: [0.557, 0.471, 0.710, 1.0]
+        });
+        mouthNode.addChild(toothNode);
+        allTeeth.push(toothNode);
+    }
+
+    const bottomTeethCount = 6;
+    for (let i = 0; i < bottomTeethCount; i++) {
+        const t_val = 0.2 + (i * 0.12);
+        const bezierPos = bezier(t_val, ...haunterBottomTeethCurve); 
+
+        const toothNode = new SceneNode({
+            buffers: buffers.haunterTooth,
+            localTransform: {
+                position: bezierPos,
+                rotation: [0.3, 0, 0], 
+                scale: [0.8, 0.8, 0.8]
+            },
+            color: [0.557, 0.471, 0.710, 1.0]
+        });
+        mouthNode.addChild(toothNode); 
+        allTeeth.push(toothNode); 
+    }
+
+    // Return the main node and references for animation
+    return {
+        modelRoot: haunterRootNode,
+        allTeeth: allTeeth,
+        leftHandNode: leftHandNode,
+        rightHandNode: rightHandNode
+    };
 }
 
 // ============================================
@@ -1704,17 +1861,16 @@ let isFlipping = false;
 
 function updateHaunterAnimation(now, haunterRefs) {
     // Check if refs are valid
-    if (!haunterRefs || !haunterRefs.modelRoot || !haunterRefs.allTeeth) {
+    if (!haunterRefs || !haunterRefs.modelRoot || !haunterRefs.allTeeth || !haunterRefs.leftHandNode || !haunterRefs.rightHandNode) {
         console.error("Invalid haunterRefs passed to updateHaunterAnimation");
         return;
     }
 
-    // Tooth wiggle animation
-    const toothAmplitude = 0.03; // Renamed amplitude to avoid conflict
+    // --- Animasi Gigi Bergetar (Tooth wiggle) ---
+    const toothAmplitude = 0.03;
     const toothSpeed = 4;
     haunterRefs.allTeeth.forEach(tooth => {
         if (tooth && tooth.localTransform) {
-            // Initialize initialY if it doesn't exist on the tooth node
             if (tooth.initialY === undefined) {
                 tooth.initialY = tooth.localTransform.position[1];
             }
@@ -1723,50 +1879,63 @@ function updateHaunterAnimation(now, haunterRefs) {
         }
     });
 
-    // Flip animation (Uses global state variables: isFlipping, lastFlipTime)
+    // --- Animasi Salto (Flip) ---
     let currentRotation = 0;
     if (isFlipping) {
         const elapsedTime = now - lastFlipTime;
         if (elapsedTime < flipDuration) {
             const progress = elapsedTime / flipDuration;
-            // Ease-out cubic easing function for smoother end
             const easedProgress = 1 - Math.pow(1 - progress, 3);
-            currentRotation = -easedProgress * 2 * Math.PI; // Rotate around X-axis
+            currentRotation = -easedProgress * 2 * Math.PI; // Rotasi sumbu X
         } else {
-            isFlipping = false; // End flipping state
-            currentRotation = 0; // Ensure it ends exactly at 0 rotation
+            isFlipping = false;
+            currentRotation = 0;
         }
     } else {
-        // Check if it's time to start the next flip
         if (now - lastFlipTime >= flipInterval) {
-            isFlipping = true; // Start flipping state
-            lastFlipTime = now; // Record flip start time
-            currentRotation = 0; // Start rotation from 0
+            isFlipping = true;
+            lastFlipTime = now;
+            currentRotation = 0;
         } else {
-            currentRotation = 0; // Stay at 0 rotation
+            currentRotation = 0;
         }
     }
-    // Apply rotation to the main Haunter node
     haunterRefs.modelRoot.localTransform.rotation[0] = currentRotation;
 
-    // Idle float and breath animation
+    // --- Animasi Mengambang dan Bernapas (Float and Breath) ---
     const idleAmplitude = 0.1;
     const idleSpeed = 2;
-    const initialRootY = 0;
+    const initialRootY = 0; 
     const breathAmplitude = 0.05;
     const baseScale = 1.0;
-
     const sinValue = Math.sin(now * idleSpeed);
-
-    // Apply float
     haunterRefs.modelRoot.localTransform.position[1] = initialRootY + idleAmplitude * sinValue;
-
-    // Apply breath scaling (uniformly)
     const currentScale = baseScale + ((sinValue + 1) / 2) * breathAmplitude;
     haunterRefs.modelRoot.localTransform.scale[0] = currentScale;
     haunterRefs.modelRoot.localTransform.scale[1] = currentScale;
     haunterRefs.modelRoot.localTransform.scale[2] = currentScale;
 
+    // --- Animasi Tangan Berputar (Arbitrary Axis) ---
+    const orbitSpeed = 1.5;   // Kecepatan tangan berputar
+    const orbitAxis = [0.2, 1, 0]; // Sumbu miring (sedikit ke X, dominan ke Y)
+    const orbitAngle = now * orbitSpeed; // Sudut rotasi saat ini
+    
+    // Posisi dasar tangan (jika tidak berputar)
+    const baseLeftPos = [-1.3, -0.5, 0.5];
+    const baseRightPos = [1.3, -0.5, 0.5];
+
+    // Hitung posisi baru menggunakan rotasi sumbu arbitrer
+    const newLeftPos = rotateAroundArbitraryAxis(baseLeftPos, orbitAxis, orbitAngle);
+    // Putar tangan kanan 180 derajat (Math.PI) agar berseberangan
+    const newRightPos = rotateAroundArbitraryAxis(baseRightPos, orbitAxis, orbitAngle + Math.PI); 
+
+    // Terapkan posisi baru ke node tangan
+    haunterRefs.leftHandNode.localTransform.position = newLeftPos;
+    haunterRefs.rightHandNode.localTransform.position = newRightPos;
+    
+    // Kita juga bisa membuat tangan berotasi menghadap ke pusat saat berputar (opsional)
+    haunterRefs.leftHandNode.localTransform.rotation[1] = -orbitAngle;
+    haunterRefs.rightHandNode.localTransform.rotation[1] = -orbitAngle;
 }
 
 function updateGengarAnimation(now, gengarRefs) {
@@ -2683,6 +2852,11 @@ function createHaunterCone(radius = 1, height = 2, slices = 48, topRatio = 0.0) 
     }
 
     return { vertices, normals, indices };
+}
+
+function createHaunterConeBuffer(gl, radius = 0.1, height = 0.3, segments = 24) {
+  const geom = createHaunterConeGeometry(radius, height, segments);
+  return initBuffers(gl, geom);
 }
 
 function createHaunterEllipticParaboloid(a, b, height, segments = 36, stacks = 24, sharpness = 1.0) {
