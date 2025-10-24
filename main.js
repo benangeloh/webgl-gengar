@@ -1998,80 +1998,79 @@ function updateGengarAnimation(now, gengarRefs) {
 }
 
 function updateGigantamaxAnimation(now, gmaxRefs, gl, buffers) {
-    // Check if refs are valid
-    if (!gmaxRefs || !gmaxRefs.modelRoot) {
-        console.error("Invalid gmaxRefs passed to updateGigantamaxAnimation");
-        return;
-    }
+    // Check if refs are valid
+    if (!gmaxRefs || !gmaxRefs.modelRoot) {
+        console.error("Invalid gmaxRefs passed to updateGigantamaxAnimation");
+        return;
+    }
 
-    // --- G-Max Body Breath ---
-    const breathSpeed = 0.5; 
-    const breathAmount = 0.02;
-    const breathScaleFactor = 1.0 + Math.sin(now * breathSpeed * 2 * Math.PI) * breathAmount;
-    if (gmaxRefs.initialBodyScaleY !== undefined) {
-         gmaxRefs.modelRoot.localTransform.scale[1] = gmaxRefs.initialBodyScaleY * breathScaleFactor;
-    }
+    // --- G-Max Body Breath ---
+    const breathSpeed = 0.5; 
+    const breathAmount = 0.02;
+    const breathScaleFactor = 1.0 + Math.sin(now * breathSpeed * 2 * Math.PI) * breathAmount;
+    if (gmaxRefs.initialBodyScaleY !== undefined) {
+         gmaxRefs.modelRoot.localTransform.scale[1] = gmaxRefs.initialBodyScaleY * breathScaleFactor;
+    }
 
-    // --- G-Max Arm Pump ---
-    // This animation scales the arms and moves them up/down slightly relative to their starting position.
-    const armAnimSpeed = 0.8;
-    const armCycle = (Math.sin(now * armAnimSpeed * Math.PI) + 1) / 2; // Oscillates 0 -> 1 -> 0
+    // --- G-Max Arm Pump ---
+    const armAnimSpeed = 0.8;
+    const armCycle = (Math.sin(now * armAnimSpeed * Math.PI) + 1) / 2; // Oscillates 0 -> 1 -> 0
 
-    if (gmaxRefs.leftArmNode && gmaxRefs.initialLeftArmTransform) {
-        const minScaleY = gmaxRefs.initialLeftArmTransform.scale[1];
-        const maxScaleY = gmaxRefs.initialRightArmTransform.scale[1]; // Assuming right arm is the 'max' scale
-        
-        const leftArmScaleY = minScaleY + armCycle * (maxScaleY - minScaleY);
-        gmaxRefs.leftArmNode.localTransform.scale[1] = leftArmScaleY;
-        
-        // Animate Y position slightly, relative to its initial local position
-        const armYMoveAmount = 0.2; // How much the arm moves up/down
-        gmaxRefs.leftArmNode.localTransform.position[1] = gmaxRefs.initialLeftArmTransform.position[1] + (armCycle * armYMoveAmount);
-    }
-    
-    if (gmaxRefs.rightArmNode && gmaxRefs.initialRightArmTransform) {
-        const minScaleY = gmaxRefs.initialLeftArmTransform.scale[1];
-        const maxScaleY = gmaxRefs.initialRightArmTransform.scale[1];
-        
-        const rightArmScaleY = maxScaleY - armCycle * (maxScaleY - minScaleY); // Opposite of left
-        gmaxRefs.rightArmNode.localTransform.scale[1] = rightArmScaleY;
+    if (gmaxRefs.leftArmNode && gmaxRefs.initialLeftArmTransform && gmaxRefs.rightArmNode && gmaxRefs.initialRightArmTransform) {
+        const minScaleY = gmaxRefs.initialLeftArmTransform.scale[1];
+        const maxScaleY = gmaxRefs.initialRightArmTransform.scale[1]; // Assuming right arm is the 'max' scale
+        
+        const leftArmScaleY = minScaleY + armCycle * (maxScaleY - minScaleY);
+        gmaxRefs.leftArmNode.localTransform.scale[1] = leftArmScaleY;
+        
+        const armYMoveAmount = 0.2; // How much the arm moves up/down
+        gmaxRefs.leftArmNode.localTransform.position[1] = gmaxRefs.initialLeftArmTransform.position[1] + (armCycle * armYMoveAmount);
+        
+        const rightArmScaleY = maxScaleY - armCycle * (maxScaleY - minScaleY); // Opposite of left
+        gmaxRefs.rightArmNode.localTransform.scale[1] = rightArmScaleY;
 
-        // Animate Y position in the opposite direction
-        const armYMoveAmount = 0.2;
-        gmaxRefs.rightArmNode.localTransform.position[1] = gmaxRefs.initialRightArmTransform.position[1] + ((1 - armCycle) * armYMoveAmount);
-    }
+        gmaxRefs.rightArmNode.localTransform.position[1] = gmaxRefs.initialRightArmTransform.position[1] + ((1 - armCycle) * armYMoveAmount);
+    }
 
-    // --- G-Max Tail Swing ---
-    const tailAnimSpeed = 1.5;
-    const tailCurveDepth = 0.2;
-    const swingFactor = Math.cos(now * tailAnimSpeed); // Oscillates -1 -> 1 -> -1
-    
-    if (gmaxRefs.tailNode && gmaxRefs.initialTailTransform) {
-        gmaxRefs.tailNode.localTransform.position[0] = gmaxRefs.initialTailTransform.position[0] * swingFactor;
-        gmaxRefs.tailNode.localTransform.position[2] = gmaxRefs.initialTailTransform.position[2] - tailCurveDepth * (1 - Math.abs(swingFactor));
-        gmaxRefs.tailNode.localTransform.rotation[1] = gmaxRefs.initialTailTransform.rotation[1] - swingFactor;
-    }
+    // --- G-Max Tail Swing ---
+    const tailAnimSpeed = 1.5;
+    const tailCurveDepth = 0.2;
+    const swingFactor = Math.cos(now * tailAnimSpeed); // Oscillates -1 -> 1 -> -1
+    
+    if (gmaxRefs.tailNode && gmaxRefs.initialTailTransform) {
+        gmaxRefs.tailNode.localTransform.position[0] = gmaxRefs.initialTailTransform.position[0] * swingFactor;
+gmaxRefs.tailNode.localTransform.position[2] = gmaxRefs.initialTailTransform.position[2] - tailCurveDepth * (1 - Math.abs(swingFactor));
+        gmaxRefs.tailNode.localTransform.rotation[1] = gmaxRefs.initialTailTransform.rotation[1] - swingFactor;
+    }
 
-    // --- G-Max Cloud Rotation ---
-    const cloudSpeed = 0.5;
-    if (gmaxRefs.cloudParentNode) {
-        gmaxRefs.cloudParentNode.localTransform.rotation[1] = now * cloudSpeed;
-    }
+    // --- G-Max Cloud Rotation (Wobble Arbitrer) ---
+    const cloudSpeed = 0.5;   // Kecepatan putar utama (sumbu Y)
+    const wobbleSpeed = 1.2;  // Seberapa cepat awan bergoyang
+    const wobbleAmount = 0.15; // Seberapa miring goyangannya (dalam radian)
 
-    // --- G-Max Dynamic Tongue ---
-    if (gmaxRefs.tongueNode && gmaxRefs.tongueNode.buffers && buffers.gmaxTongue) {
-        // Create new tongue geometry based on time
-        const updatedTongueGeometry = createTongue({ time: now }); 
-        
-        // Bind the correct, existing tongue buffer
-        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.gmaxTongue.position);
-        // Update just the vertex data in the buffer
-        gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(updatedTongueGeometry.vertices));
-        
-        // You should also update normals if they change (createTongue normals are static, so this is optional)
-        // gl.bindBuffer(gl.ARRAY_BUFFER, buffers.gmaxTongue.normal);
-        // gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(updatedTongueGeometry.normals));
-    }
+    if (gmaxRefs.cloudParentNode) {
+        // 1. Rotasi Y utama (tetap berputar)
+        gmaxRefs.cloudParentNode.localTransform.rotation[1] = now * cloudSpeed;
+
+        // 2. Tambahkan goyangan (wobble) pada sumbu X
+        gmaxRefs.cloudParentNode.localTransform.rotation[0] = Math.sin(now * wobbleSpeed) * wobbleAmount;
+        
+        // 3. Tambahkan goyangan (wobble) pada sumbu Z (gunakan Math.cos agar fasenya beda)
+        gmaxRefs.cloudParentNode.localTransform.rotation[2] = Math.cos(now * wobbleSpeed) * wobbleAmount;
+    } else {
+         console.warn("cloudParentNode not found in gmaxRefs");
+    }
+
+    // --- G-Max Dynamic Tongue ---
+    if (gmaxRefs.tongueNode && gmaxRefs.tongueNode.buffers && buffers.gmaxTongue) {
+        // Create new tongue geometry based on time
+        const updatedTongueGeometry = createTongue({ time: now }); 
+        
+        // Bind the correct, existing tongue buffer
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.gmaxTongue.position);
+        // Update just the vertex data in the buffer
+        gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(updatedTongueGeometry.vertices));
+    }
 }
 
 function main() {
