@@ -2801,62 +2801,41 @@ function createHaunterSphere(radius=1, stacks=48, slices=48){
   return { vertices, normals, indices };
 }
 
-function createHaunterCone(radius = 1, height = 2, slices = 48, topRatio = 0.0) {
-    const vertices = [];
-    const normals = [];
-    const indices = [];
-    const heightHalf = height / 2;
+function createHaunterCone(radius = 0.1, height = 0.3, segments = 24) {
+  const vertices = [];
+  const normals = [];
+  const indices = [];
 
-    for (let y = 0; y <= 1; y++) { 
-        const r = (y === 0) ? radius : radius * topRatio;
-        const currentY = -heightHalf + y * height;
+  for (let i = 0; i < segments; i++) {
+    const theta = (i / segments) * Math.PI * 2;
+    const x = radius * Math.cos(theta);
+    const z = radius * Math.sin(theta);
+    vertices.push(x, 0, z);
+    const nx = Math.cos(theta);
+    const ny = radius / Math.sqrt(radius * radius + height * height); 
+    const nz = Math.sin(theta);
+    const len = Math.hypot(nx, ny, nz);
+    normals.push(nx / len, ny / len, nz / len);
+  }
 
-        for (let x = 0; x <= slices; x++) {
-            const u = x / slices;
-            const angle = u * Math.PI * 2;
-            const cosA = Math.cos(angle);
-            const sinA = Math.sin(angle);
+  const tipIndex = vertices.length / 3;
+  vertices.push(0, height, 0);
+  normals.push(0, 1, 0); 
 
-            vertices.push(cosA * r, currentY, sinA * r);
+  const baseCenterIndex = vertices.length / 3;
+  vertices.push(0, 0, 0);
+  normals.push(0, -1, 0);
 
-            const nx = cosA, ny = radius / height, nz = sinA;
-            const len = Math.hypot(nx, ny, nz) || 1;
-            normals.push(nx / len, ny / len, nz / len);
-        }
-    }
+  for (let i = 0; i < segments; i++) {
+    const next = (i + 1) % segments;
+    indices.push(i, next, tipIndex);
+  }
 
-    for (let x = 0; x < slices; x++) {
-        const i1 = x;
-        const i2 = x + 1;
-        const i3 = i1 + slices + 1;
-        const i4 = i2 + slices + 1;
-        indices.push(i1, i3, i2);
-        indices.push(i2, i3, i4);
-    }
-
-    const baseCenterIndex = vertices.length / 3;
-    vertices.push(0, -heightHalf, 0);
-    normals.push(0, -1, 0);
-    for (let x = 0; x < slices; x++) {
-        indices.push(baseCenterIndex, x, x + 1);
-    }
-
-    if (topRatio > 0) {
-        const topCenterIndex = vertices.length / 3;
-        vertices.push(0, heightHalf, 0);
-        normals.push(0, 1, 0);
-        const topRowStartIndex = slices + 1;
-        for (let x = 0; x < slices; x++) {
-            indices.push(topCenterIndex, topRowStartIndex + x + 1, topRowStartIndex + x);
-        }
-    }
-
-    return { vertices, normals, indices };
-}
-
-function createHaunterConeBuffer(gl, radius = 0.1, height = 0.3, segments = 24) {
-  const geom = createHaunterConeGeometry(radius, height, segments);
-  return initBuffers(gl, geom);
+  for (let i = 0; i < segments; i++) {
+    const next = (i + 1) % segments;
+    indices.push(baseCenterIndex, next, i);
+  }
+  return { vertices, normals, indices };
 }
 
 function createHaunterEllipticParaboloid(a, b, height, segments = 36, stacks = 24, sharpness = 1.0) {
