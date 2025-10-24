@@ -624,8 +624,8 @@ function createHaunterNode(buffers) { // Mengambil object buffers
         buffers: buffers.haunterTail,
         localTransform: { 
             position: [0, -0.7, -0.65], 
-            rotation: [-115 * Math.PI / 180, Math.PI / 18, 0], 
-            scale: [1.4, 1, 1.25]
+            rotation: [-115 * Math.PI / 180, Math.PI/2, 0], 
+            scale: [0.6, 0.5, 0.55]
         },
         color: [0.557, 0.471, 0.710, 1.0]
     });
