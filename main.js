@@ -597,16 +597,16 @@ const haunterFingerData = [
 ];
 
 const haunterTopTeethCurve = [
-    [-0.7, 0.17, -0.28], 
-    [-0.2, 0.17, 0.1],
-    [0.2, 0.17, 0.1],
-    [0.7, 0.17, -0.28]
+    [-0.7, 0.3, -0.28], 
+    [-0.2, 0.3, 0.1],
+    [0.2, 0.3, 0.1],
+    [0.7, 0.3, -0.28]
 ];
 const haunterBottomTeethCurve = [
-    [-0.5, 0.23, -0.15],
-    [-0.4, -0.25, 0.07],
-    [0.4, -0.25, 0.07],
-    [0.5, 0.23, -0.15]
+    [-0.5, 0.15, -0.15],
+    [-0.4, -0.35, 0.07],
+    [0.4, -0.35, 0.07],
+    [0.5, 0.15, -0.15]
 ];
 
 function createHaunterNode(buffers) { // Mengambil object buffers
@@ -1865,20 +1865,6 @@ function updateHaunterAnimation(now, haunterRefs) {
         console.error("Invalid haunterRefs passed to updateHaunterAnimation");
         return;
     }
-
-    // --- Animasi Gigi Bergetar (Tooth wiggle) ---
-    const toothAmplitude = 0.03;
-    const toothSpeed = 4;
-    haunterRefs.allTeeth.forEach(tooth => {
-        if (tooth && tooth.localTransform) {
-            if (tooth.initialY === undefined) {
-                tooth.initialY = tooth.localTransform.position[1];
-            }
-            const newY = tooth.initialY + toothAmplitude * Math.sin(now * toothSpeed);
-            tooth.localTransform.position[1] = newY;
-        }
-    });
-
     // --- Animasi Salto (Flip) ---
     let currentRotation = 0;
     if (isFlipping) {
