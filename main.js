@@ -404,7 +404,7 @@ function updatePoisonGasStream(now, mouthNode) {
 function createGastlyNode(buffers) {
     const body = new SceneNode({
         buffers: buffers.gastlyBody,
-        localTransform: { position: [0.0, 0.0, 0.0], rotation: [0.0, 0.0, 0.0], scale: [1.5, 1.5, 1.5] },
+        localTransform: { position: [0.0, 0.0, 0.0], rotation: [0.0, 0.0, 0.0], scale: [1.0, 1.0, 1.0] },
         color: [0., 0., 0., 0.9],
         isGlowing: false
     });
@@ -2138,7 +2138,7 @@ function main() {
     const gmaxPupil_Geom = createEllipticParaboloid(1.0, 0.6, 0.2, 32, 60);
 
     // Environment Geometries
-    const floor_Geom = createWavyPlane(40, 40, 50, 50);
+    const floor_Geom = createWavyPlane(40, 40, 10, 50, 50);
     const crystal_Geom = createCrystal(3.0, 1.0, 6);
 
     // ============================================
@@ -2222,7 +2222,7 @@ function main() {
     placeCluster(createCrystalClusterB, { position: [-10, -2.1, -2], rotation: [0, 1.2, 0], scale: [1.0, 1.5, 1.0], glowing: true, color: glowingCrystalColor });
     placeCluster(createCrystalClusterB, { position: [6, -1.9, -6], rotation: [0, -0.8, 0], scale: [1.5, 1.8, 1.5], glowing: true, color: glowingCrystalColor });
     placeCluster(createCrystalClusterA, { position: [11, -2.0, 0], rotation: [0, -1.5, 0], scale: [0.9, 1.1, 0.9], glowing: true, color: glowingCrystalColor });
-    placeCluster(createCrystalClusterB, { position: [2, -2.1, -15], rotation: [0, 0.1, 0], scale: [2.0, 2.5, 2.0], glowing: true, color: glowingCrystalColor });
+    placeCluster(createCrystalClusterB, { position: [2, -2.1, -10], rotation: [0, 0.1, 0], scale: [2.0, 2.5, 2.0], glowing: true, color: glowingCrystalColor });
 
     // --- Create Pokémon Models ---
     const gastlyData = createGastlyNode(buffers);
@@ -2231,7 +2231,7 @@ function main() {
     const gigantamaxData = createGigantamaxNode(gl, buffers);
 
     // --- Position Pokémon ---
-    gastlyData.modelRoot.localTransform.position = [7 , 6, 0];
+    gastlyData.modelRoot.localTransform.position = [7 , 4, 0];
     gengarData.modelRoot.localTransform.rotation = [0, 0.2, 0];
     haunterData.modelRoot.localTransform.position = [7, 0, 0];
     gengarData.modelRoot.localTransform.position = [-6.5, -0.15, 0];
@@ -2253,8 +2253,8 @@ function main() {
     // 4. CAMERA CONTROLS & RENDER LOOP
     // ============================================
     let isDragging = false;
-    let cameraRotation = { x: 0.15, y: 0.0 };
-    let cameraDistance = 22.0;
+    let cameraRotation = { x: 0.1, y: 0.0 };
+    let cameraDistance = 42.0;
     canvas.addEventListener('mousedown', (e) => { isDragging = true; previousMousePosition = { x: e.clientX, y: e.clientY }; canvas.style.cursor = 'grabbing'; });
     window.addEventListener('mouseup', () => { isDragging = false; canvas.style.cursor = 'grab'; });
     window.addEventListener('mousemove', (e) => {
@@ -2269,7 +2269,7 @@ function main() {
     canvas.addEventListener('wheel', (e) => {
         e.preventDefault();
         cameraDistance += e.deltaY * 0.02; // Adjust sensitivity
-        cameraDistance = Math.max(3.0, Math.min(40.0, cameraDistance)); // Clamp zoom
+        cameraDistance = Math.max(3.0, Math.min(60.0, cameraDistance)); // Clamp zoom
     }, { passive: false });
 
     function renderNode(node, parentWorldMatrix, viewMatrix) {
@@ -3921,44 +3921,93 @@ function createCloudEllipsoid(rx, ry, rz, segments = 16, stacks = 12) {
 // ============================================
 // ENVIRONMENT GEOMETRY
 // ============================================
-
-function createWavyPlane(width, height, widthSegments, heightSegments) {
+function createWavyPlane(width, height, depth, widthSegments, heightSegments) {
     const vertices = [], normals = [], indices = [];
-    const width_half = width / 2;
-    const height_half = height / 2;
     const gridX = Math.floor(widthSegments);
     const gridZ = Math.floor(heightSegments);
     const segment_width = width / gridX;
     const segment_height = height / gridZ;
+    const width_half = width / 2;
+    const height_half = height / 2;
 
-    // vertices n normals for grid
     for (let iz = 0; iz <= gridZ; iz++) {
-        const z = iz * segment_height - height_half;
+        const z_base = iz * segment_height - height_half;
         for (let ix = 0; ix <= gridX; ix++) {
-            const x = ix * segment_width - width_half;
+            const x_base = ix * segment_width - width_half;
+
+            const angle = Math.atan2(z_base, x_base);
+            const distRaw = Math.hypot(x_base, z_base);
             
-            // wave effect
-            const y = (Math.sin(x * 0.3) + Math.cos(z * 0.3)) * 0.3;
-            vertices.push(x, y, z);
+            const maxRadius = (width * 0.4) + (width * 0.025) * Math.sin(angle * 5);
+
+            let x = x_base;
+            let z = z_base;
+            let normalizedDist = distRaw / maxRadius;
+
+            if (distRaw > maxRadius) {
+                const ratio = maxRadius / distRaw;
+                x = x_base * ratio;
+                z = z_base * ratio;
+                normalizedDist = 1.0;
+            }
+
+            // TOP SURFACE
+            const yTop = (Math.sin(x * 0.5) + Math.cos(z * 0.5)) * 0.2;
+
+            const topNx = -0.2 * Math.cos(x * 0.5);
+            const topNz = 0.2 * Math.sin(z * 0.5);
+            const topNormal = [topNx, 1, topNz];
+            const tnLen = Math.hypot(...topNormal);
+
+
+            // BOTTOM SURFACE
             
-            const dYdX = 0.3 * Math.cos(x * 0.3);
-            const dYdZ = -0.3 * Math.sin(z * 0.3);
-            const normal = [-dYdX, 1, -dYdZ];
-            const len = Math.hypot(...normal);
-            normals.push(normal[0]/len, normal[1]/len, normal[2]/len);
+            const centerFactor = Math.max(0, 1 - normalizedDist);
+            const baseShape = Math.pow(centerFactor, 1.5) * depth;
+            const ridgeAngle = angle * 3.0 + (centerFactor * 0.5);
+            const bigRidges = (Math.cos(ridgeAngle) + 1.0) * 0.5; 
+            const rocks = Math.sin(x * 2.0) * Math.cos(z * 2.0) * 0.5;
+            const totalDepth = baseShape + (bigRidges * depth * 0.3 * centerFactor) + rocks;
+            const yBottom = Math.min(yTop - 0.1, yTop - totalDepth);
+            const ridgeTilt = Math.sin(ridgeAngle) * 1.5;
+            
+            let botNx = x;
+            let botNy = -depth * 0.5;
+            let botNz = z;
+            
+            const cosR = Math.cos(angle);
+            const sinR = Math.sin(angle);
+            
+            botNx += -sinR * ridgeTilt;
+            botNz += cosR * ridgeTilt;
+
+            const bnLen = Math.hypot(botNx, botNy, botNz);
+
+
+            vertices.push(x, yTop, z); 
+            normals.push(topNormal[0]/tnLen, topNormal[1]/tnLen, topNormal[2]/tnLen);
+
+            vertices.push(x, yBottom, z); 
+            normals.push(botNx/bnLen, botNy/bnLen, botNz/bnLen);
         }
     }
 
+    // INDICES
     for (let iz = 0; iz < gridZ; iz++) {
         for (let ix = 0; ix < gridX; ix++) {
-            const a = ix + (gridX + 1) * iz;
-            const b = ix + 1 + (gridX + 1) * iz;
-            const c = ix + (gridX + 1) * (iz + 1);
-            const d = ix + 1 + (gridX + 1) * (iz + 1);
-            indices.push(a, b, d);
-            indices.push(a, d, c);
+            const current = ix + (gridX + 1) * iz;
+            const next = ix + 1 + (gridX + 1) * iz;
+            const bottom = ix + (gridX + 1) * (iz + 1);
+            const diagonal = ix + 1 + (gridX + 1) * (iz + 1);
+
+            indices.push(current * 2, next * 2, diagonal * 2);
+            indices.push(current * 2, diagonal * 2, bottom * 2);
+
+            indices.push(current * 2 + 1, diagonal * 2 + 1, next * 2 + 1);
+            indices.push(current * 2 + 1, bottom * 2 + 1, diagonal * 2 + 1);
         }
     }
+
     return { vertices, normals, indices };
 }
 
