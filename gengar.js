@@ -101,13 +101,10 @@ function main() {
     // geometries
     const bodyGeometry = createEllipsoid(1.0, 1.0, 1.0, 32, 24);
     const coneGeometry = createQuadricCone(1.5, 1.5, 1.0, 60, 30);
-    const tongueGeometry = createTongue(2, 0.6, 0.2, 50);
     const noHole = { phiStart: 0, phiLength: 0, thetaStart: 0, thetaLength: 0 };
     const eyeGeometry = createHemisphereWithHole(1.0, 32, 32, noHole);
     const pupilGeometry = createEllipsoid(1.0, 1.0, 1.0, 32, 24);
     const armGeometry = createEllipticParaboloid(1.0, 0.6, 0.2, 32, 200);
-    const mouthBackGeometry = createDisc(80);
-    const tailGeometry = createShearedCone(1.0, 2.0, 1.5, 0, 36, 24);
     const cylinderGeometry = createQuadricCylinder(1.0, 1.0, 32);
 
 
@@ -117,8 +114,6 @@ function main() {
     const eyeBuffers = initBuffers(gl, eyeGeometry);
     const pupilBuffers = initBuffers(gl, pupilGeometry);
     const armBuffers = initBuffers(gl, armGeometry);
-    const mouthBackBuffers = initBuffers(gl, mouthBackGeometry);
-    const tailBuffers = initBuffers(gl, tailGeometry);
     const cylinderBuffers = initBuffers(gl, cylinderGeometry);
 
     const root = new SceneNode();
@@ -127,21 +122,44 @@ function main() {
     const body = new SceneNode({
         buffers: bodyBuffers,
         localTransform: { 
-            position: [0.0, 0.0, 0.0],
-            rotation: [0.0, 0.0, 0.0], 
-            scale: [1.7, 1.75, 1.5]
+            position: [0.0, 0.0, -0.0],
+            rotation: [-0.0, 0.0, 0.0], 
+            scale: [1.65, 1.75, 1.4]
         },
         color: [0.4, 0.30, 0.60, 1.0]
     });
     root.addChild(body);
 
+    const bodyBottom = new SceneNode({
+        buffers: bodyBuffers,
+        localTransform: { 
+            position: [0.0, -0.057, -0.007],
+            rotation: [0.0, 0.0, 0.0], 
+            scale: [1.0, 1.0, 1.0]
+        },
+        color: [0.39, 0.29, 0.59, 1.0]
+    });
+    body.addChild(bodyBottom);
+
+    const bodyBottom2 = new SceneNode({
+        buffers: bodyBuffers,
+        localTransform: { 
+            position: [0.0, -0.429, -0.007],
+            rotation: [0.0, 0.0, 0.0], 
+            scale: [0.88, 0.66, 0.71]
+        },
+        color: [0.37, 0.27, 0.57, 1.0]
+    });
+    body.addChild(bodyBottom2);
+
+
     // ears (children of body)
     const leftEar = new SceneNode({
         buffers: coneBuffers,
         localTransform: { 
-            position: [-0.75, 0.943, 0], 
-            rotation: [0, -0.6, 0.7], 
-            scale: [0.25, 0.85, 0.22] },
+            position: [-0.72, 0.843, -0.0], 
+            rotation: [-0.4, -0.4, 0.65], 
+            scale: [0.3, 1.4, 0.26] },
         color: [0.4, 0.30, 0.60, 1.0]
     });
     body.addChild(leftEar);
@@ -149,9 +167,9 @@ function main() {
     const rightEar = new SceneNode({
         buffers: coneBuffers,
         localTransform: { 
-            position: [0.75, 0.943, 0], 
-            rotation: [0, 0.6, -0.7], 
-            scale: [0.25, 0.85, 0.22] },
+            position: [0.72, 0.843, 0.0], 
+            rotation: [-0.4, 0.4, -0.65], 
+            scale: [0.3, 1.4, 0.26] },
         color: [0.4, 0.30, 0.60, 1.0]
     });
     body.addChild(rightEar);
@@ -160,11 +178,11 @@ function main() {
     const topSpikes = [
         { pos: [0, 1.0, 0.05], rot: [-0.7, 0, 0], scale: [0.15, 0.7, 0.15] },
 
-        { pos: [-0.175, 1.0, 0.05], rot: [-0.3, 0, 0.15], scale: [0.08, 0.3, 0.15] },
-        { pos: [0.175, 1.0, 0.05], rot: [-0.3, 0, -0.15], scale: [0.08, 0.3, 0.15] },
+        { pos: [-0.205, 0.98, 0.05], rot: [-0.3, 0, 0.45], scale: [0.08, 0.3, 0.15] },
+        { pos: [0.205, 0.98, 0.05], rot: [-0.3, 0, -0.45], scale: [0.08, 0.3, 0.15] },
 
-        { pos: [-0.32, 0.925, 0.1], rot: [-0.4, 0, 0.45], scale: [0.075, 0.3, 0.15] },
-        { pos: [0.32, 0.925, 0.1], rot: [-0.4, 0, -0.45], scale: [0.075, 0.3, 0.15] },
+        { pos: [-0.36, 0.925, -0.05], rot: [-0.4, 0, 0.6], scale: [0.075, 0.3, 0.15] },
+        { pos: [0.36, 0.925, -0.05], rot: [-0.4, 0, -0.6], scale: [0.075, 0.3, 0.15] },
         // { pos: [-0.05, 1.025, -0.025], rot: [-0.2, 0.0, -0.2], scale: [0.03, 0.087, 0.03] },
         // { pos: [-0.175, 1.025, -0.125], rot: [-0.4, 0.0, 0.3], scale: [0.07, 0.168, 0.07] },
         // { pos: [-0.2, 1.0, 0.0], rot: [-0.0, 0.0, 0.6], scale: [0.03, 0.083, 0.03] },
@@ -207,9 +225,9 @@ function main() {
     const leftEyeWhite = new SceneNode({
         buffers: eyeBuffers,
         localTransform: {
-            position: [-0.26, 0.265, 0.88],
-            rotation: [-0.2, -0.3, -3.8],
-            scale: [0.225, 0.22, 0.1]
+            position: [-0.25, 0.22, 0.88],
+            rotation: [-0.2, -0.3, -3.85],
+            scale: [0.205, 0.19, 0.1]
         },
         color: eyeColor
     });
@@ -218,9 +236,9 @@ function main() {
     body.addChild(new SceneNode({
         buffers: eyeBuffers,
         localTransform: {
-            position: [-0.26, 0.264, 0.88],
-            rotation: [-0.2, -0.3, -3.79],
-            scale: [0.23, 0.225, 0.08]
+            position: [-0.25, 0.219, 0.88],
+            rotation: [-0.19, -0.3, -3.84],
+            scale: [0.221, 0.215, 0.08]
         },
         color: [0.0, 0.0, 0.0, 1.0]
     }));
@@ -228,9 +246,9 @@ function main() {
     const rightEyeWhite = new SceneNode({
         buffers: eyeBuffers,
         localTransform: {
-            position: [0.26, 0.265, 0.88],
-            rotation: [-0.2, 0.3, 3.8],
-            scale: [0.225, 0.22, 0.1]
+            position: [0.25, 0.22, 0.88],
+            rotation: [-0.2, 0.3, 3.85],
+            scale: [0.205, 0.19, 0.1]
         },
         color: eyeColor
     });
@@ -239,9 +257,9 @@ function main() {
     body.addChild(new SceneNode({
         buffers: eyeBuffers,
         localTransform: {
-            position: [0.26, 0.264, 0.88],
-            rotation: [-0.2, 0.3, 3.79],
-            scale: [0.23, 0.225, 0.08]
+            position: [0.25, 0.219, 0.88],
+            rotation: [-0.19, 0.3, 3.84],
+            scale: [0.221, 0.215, 0.08]
         },
         color: [0.0, 0.0, 0.0, 1.0]
     }));
@@ -253,9 +271,9 @@ function main() {
     body.addChild(new SceneNode({
         buffers: pupilBuffers,
         localTransform: {
-            position: [-0.218, 0.19, 1.02],
-            rotation: [0, 0, 0],
-            scale: [0.009, 0.025, 0.01]
+            position: [-0.238, 0.19, 1.0],
+            rotation: [0, 0, 0.1],
+            scale: [0.01, 0.025, 0.005]
         },
         color: innerPupilColor
     }));
@@ -263,9 +281,9 @@ function main() {
     body.addChild(new SceneNode({
         buffers: pupilBuffers,
         localTransform: {
-            position: [-0.22, 0.18, 1.005],
-            rotation: [0, 0, 0],
-            scale: [0.02, 0.05, 0]
+            position: [-0.24, 0.18, 1.0],
+            rotation: [0, 0, 0.2],
+            scale: [0.03, 0.05, 0]
         },
         color: outerPupilColor
     }));
@@ -273,9 +291,9 @@ function main() {
     body.addChild(new SceneNode({
         buffers: pupilBuffers,
         localTransform: {
-            position: [0.218, 0.19, 1.02],
-            rotation: [0, 0, 0],
-            scale: [0.009, 0.025, 0.01]
+            position: [0.238, 0.19, 1.0],
+            rotation: [0, 0, -0.1],
+            scale: [0.01, 0.025, 0.005]
         },
         color: innerPupilColor
     }));
@@ -283,9 +301,9 @@ function main() {
     body.addChild(new SceneNode({
         buffers: pupilBuffers,
         localTransform: {
-            position: [0.22, 0.18, 1.005],
-            rotation: [0, 0, 0],
-            scale: [0.02, 0.05, 0]
+            position: [0.24, 0.18, 1.0],
+            rotation: [0, 0, -0.2],
+            scale: [0.03, 0.05, 0]
         },
         color: outerPupilColor
     }));
@@ -296,8 +314,8 @@ function main() {
         buffers: cylinderBuffers,
         localTransform: {
             // Positioned relative to the left eye
-            position: [-0.24, 0.25, 0.85], // Slightly up (Y) and forward (Z)
-            rotation: [-0.2, -0.2, -3.8], // Same rotation as the eye
+            position: [-0.231, 0.21, 0.85], // Slightly up (Y) and forward (Z)
+            rotation: [-0.2, -0.2, -3.85], // Same rotation as the eye
             scale: [0.28, 0.005, 0.12]      // Scaled to be a flat "lid"
         },
         color: [0.0, 0.0, 0.0, 1.0] // Darker purple
@@ -308,8 +326,8 @@ function main() {
         buffers: cylinderBuffers,
         localTransform: {
             // Positioned relative to the right eye
-            position: [0.24, 0.25, 0.85], // Slightly up (Y) and forward (Z)
-            rotation: [-0.2, 0.2, 3.8],  // Same rotation as the eye
+            position: [0.231, 0.21, 0.85], // Slightly up (Y) and forward (Z)
+            rotation: [-0.2, 0.2, 3.85],  // Same rotation as the eye
             scale: [0.28, 0.005, 0.12]     // Scaled to be a flat "lid"
         },
         color: [0.0, 0.0, 0.0, 1.0] // Darker purple
@@ -317,44 +335,66 @@ function main() {
     
 
     // arms - parents 2 3
-    const leftArm = new SceneNode({
-        buffers: armBuffers,
+    const leftArmTop = new SceneNode({
+        buffers: bodyBuffers,
         localTransform: {
-            position: [-1.9, -1.33, 1.6],
-            rotation: [0.0, 0.4, 0.0],
-            scale: [0.8, 4.2, 1.2]
+            position: [-1.0, 0.02, 0.1],
+            rotation: [0.0, 0.0, 2.5],
+            scale: [0.22, 0.45, 0.46]
         },
         color: [0.4, 0.30, 0.60, 1.0]
     });
-    root.addChild(leftArm);
+    body.addChild(leftArmTop);
+
+    const rightArmTop = new SceneNode({
+        buffers: bodyBuffers,
+        localTransform: {
+            position: [1.0, 0.02, 0.1],
+            rotation: [0.0, 0.0, -2.5],
+            scale: [0.22, 0.45, 0.46]
+        },
+        color: [0.4, 0.30, 0.60, 1.0]
+    });
+    body.addChild(rightArmTop);
 
     const rightArm = new SceneNode({
         buffers: armBuffers,
         localTransform: {
-            position: [2, -1.25, 1.6],
-            rotation: [0.0, -0.8, 0.0],
-            scale: [1.0, 5.0, 1.3]
+            position: [-0.0, 0.9, 0.0],
+            rotation: [-0.0, 1.5, 0.0],
+            scale: [1.8, 3.0, 2.9]
         },
         color: [0.4, 0.30, 0.60, 1.0]
     });
-    root.addChild(rightArm);
+    rightArmTop.addChild(rightArm);
+
+    const leftArm = new SceneNode({
+        buffers: armBuffers,
+        localTransform: {
+            position: [-0.0, 0.9, 0.0],
+            rotation: [-0.0, -1.5, 0.0],
+            scale: [1.8, 3.0, 2.9]
+        },
+        color: [0.4, 0.30, 0.60, 1.0]
+    });
+    leftArmTop.addChild(leftArm);
 
     const leftFingerTransforms = [
         // mid finger
-        { pos: [0.0, 0.1, 0.05], rot: [0.5, 0.0, 0.0], scale: [0.065, 0.07, 0.04] },
+        { pos: [0.0, 0.1, 0.05], rot: [0.5, 0.0, 0.0], scale: [0.13, 0.14, 0.08] },
+        // thumb 
+        { pos: [0.15, 0.085, 0.05], rot: [0.5, 0.0, -0.3], scale: [0.13, 0.14, 0.08] },
         // index
-        { pos: [-0.15, 0.085, 0.05], rot: [0.5, 0.0, 0.3], scale: [0.05, 0.07, 0.04] },
-        // thumb
-        { pos: [0.16, 0.075, 0.06], rot: [0.5, 0.0, -0.4], scale: [0.06, 0.06, 0.04] }
+        { pos: [-0.16, 0.075, 0.06], rot: [0.5, 0.0, 0.4], scale: [0.13, 0.14, 0.08] },
     ];
 
     const rightFingerTransforms = [
         // mid finger
-        { pos: [0.0, 0.1, 0.05], rot: [0.5, 0.0, 0.0], scale: [0.065, 0.07, 0.04] },
-        // thumb
-        { pos: [0.15, 0.085, 0.05], rot: [0.5, 0.0, -0.3], scale: [0.05, 0.07, 0.04] },
+        { pos: [0.0, 0.1, 0.05], rot: [0.5, 0.0, 0.0], scale: [0.13, 0.14, 0.08] },
+        // thumb 
+        { pos: [0.15, 0.085, 0.05], rot: [0.5, 0.0, -0.3], scale: [0.13, 0.14, 0.08] },
         // index
-        { pos: [-0.16, 0.075, 0.06], rot: [0.5, 0.0, 0.4], scale: [0.06, 0.06, 0.04] },
+        { pos: [-0.16, 0.075, 0.06], rot: [0.5, 0.0, 0.4], scale: [0.13, 0.14, 0.08] },
     ];
 
     leftFingerTransforms.forEach(transform => {
@@ -382,21 +422,194 @@ function main() {
         }));
     });
 
-    // tail (child of body)
-    // body.addChild(new SceneNode({
-    //     buffers: tailBuffers,
-    //     localTransform: {
-    //         position: [0.65, 0.28, -1.15],
-    //         rotation: [0.0, 1.0, 0.0],
-    //         scale: [0.3, 0.3, 0.3]
-    //     },
-    //     color: [0.4, 0.30, 0.60, 1.0]
-    // }));
+
+    const smileGeometry = createSmileMesh(1.1, 0.3, -0.2, 30);
+
+    const smileBuffers = initBuffers(gl, smileGeometry);
+
+    body.addChild(new SceneNode({
+        buffers: smileBuffers,
+        localTransform: {
+            position: [0, 0, 0.02], // Tiny Z-offset to prevent z-fighting
+            rotation: [0, 0, 0],
+            scale: [1, 1, 1]
+        },
+        color: [0.95, 0.95, 0.95, 1.0] // White
+    }));
+
+    body.addChild(new SceneNode({
+        buffers: smileBuffers,
+        localTransform: {
+            position: [0, 0.015, -0.04], // Tiny Z-offset to prevent z-fighting
+            rotation: [0, 0, 0],
+            scale: [1.03, 1.1, 1.05]
+        },
+        color: [0.3, 0.3, 0.3, 1.0] // White
+    }));
+
+    body.addChild(new SceneNode({
+        buffers: cylinderBuffers,
+        localTransform: {
+            // Positioned relative to the left eye
+            position: [-0.35, -0.11, 0.96], // Slightly up (Y) and forward (Z)
+            rotation: [-0.0, -0.0, -0], // Same rotation as the eye
+            scale: [0.005, 0.18, 0.005]      // Scaled to be a flat "lid"
+        },
+        color: [0.3, 0.3, 0.3, 1.0] // Darker purple
+    }));
+
+    body.addChild(new SceneNode({
+        buffers: cylinderBuffers,
+        localTransform: {
+            // Positioned relative to the left eye
+            position: [0.35, -0.11, 0.96], // Slightly up (Y) and forward (Z)
+            rotation: [-0.0, -0.0, -0], // Same rotation as the eye
+            scale: [0.005, 0.18, 0.005]      // Scaled to be a flat "lid"
+        },
+        color: [0.3, 0.3, 0.3, 1.0] // Darker purple
+    }));
+
+    body.addChild(new SceneNode({
+        buffers: cylinderBuffers,
+        localTransform: {
+            // Positioned relative to the left eye
+            position: [-0.175, -0.15, 1.0], // Slightly up (Y) and forward (Z)
+            rotation: [-0.0, -0.0, -0], // Same rotation as the eye
+            scale: [0.005, 0.21, 0.005]      // Scaled to be a flat "lid"
+        },
+        color: [0.3, 0.3, 0.3, 1.0] // Darker purple
+    }));
+
+    body.addChild(new SceneNode({
+        buffers: cylinderBuffers,
+        localTransform: {
+            // Positioned relative to the left eye
+            position: [0.175, -0.15, 1.0], // Slightly up (Y) and forward (Z)
+            rotation: [-0.0, -0.0, -0], // Same rotation as the eye
+            scale: [0.005, 0.21, 0.005]      // Scaled to be a flat "lid"
+        },
+        color: [0.0, 0.0, 0.0, 1.0] // Darker purple
+    }));
+    
+    body.addChild(new SceneNode({
+        buffers: cylinderBuffers,
+        localTransform: {
+            // Positioned relative to the left eye
+            position: [0.0, -0.15, 1.02], // Slightly up (Y) and forward (Z)
+            rotation: [-0.0, -0.0, -0], // Same rotation as the eye
+            scale: [0.005, 0.21, 0.005]      // Scaled to be a flat "lid"
+        },
+        color: [0.0, 0.0, 0.0, 1.0] // Darker purple
+    }));
+
+
+    body.addChild(new SceneNode({
+        buffers: cylinderBuffers,
+        localTransform: {
+            position: [-0.585, 0.09, 0.82],
+            rotation: [-0.6, -0.0, 0.6],
+            scale: [0.005, 0.1, 0.005] 
+        },
+        color: [0.1, 0.1, 0.1, 1.0]
+    }));
+
+    body.addChild(new SceneNode({
+        buffers: cylinderBuffers,
+        localTransform: {
+            position: [0.585, 0.09, 0.82],
+            rotation: [-0.6, -0.0, -0.6],
+            scale: [0.005, 0.1, 0.005]
+        },
+        color: [0.1, 0.1, 0.1, 1.0] 
+    }));
+    
+    const leftLegTop = new SceneNode({
+        buffers: cylinderBuffers,
+        localTransform: {
+            position: [-0.55, -0.76, 0.0],
+            rotation: [0.0, 0.0, 2.6],
+            scale: [0.3, 0.5, 0.35]
+        },
+        color: [0.4, 0.30, 0.60, 1.0]
+    });
+    body.addChild(leftLegTop);
+
+    const leftLegTop2 = new SceneNode({
+        buffers: bodyBuffers,
+        localTransform: {
+            position: [0.2, -0.02, 0.0],
+            rotation: [0.0, 0.0, 0.2],
+            scale: [1.07, 0.9, 1.2]
+        },
+        color: [0.4, 0.30, 0.60, 1.0]
+    });
+    leftLegTop.addChild(leftLegTop2);
+    const leftLegBottom = new SceneNode({
+        buffers: cylinderBuffers,
+        localTransform: {
+            position: [-0.02, 0.57, 0.0],
+            rotation: [-0.0, 0.0, 0.33],
+            scale: [0.87, 0.52, 0.98]
+        },
+        color: [0.4, 0.30, 0.60, 1.0]
+    });
+    leftLegTop.addChild(leftLegBottom);
+
+
+    const rightLegTop = new SceneNode({
+        buffers: cylinderBuffers,
+        localTransform: {
+            position: [0.55, -0.76, 0.0],
+            rotation: [0.0, 0.0, -2.6],
+            scale: [0.3, 0.5, 0.35]
+        },
+        color: [0.4, 0.30, 0.60, 1.0]
+    });
+    body.addChild(rightLegTop);
+
+    const rightLegTop2 = new SceneNode({
+        buffers: bodyBuffers,
+        localTransform: {
+            position: [-0.2, -0.02, 0.0],
+            rotation: [0.0, 0.0, -0.2],
+            scale: [1.07, 0.9, 1.2]
+        },
+        color: [0.4, 0.30, 0.60, 1.0]
+    });
+    rightLegTop.addChild(rightLegTop2);
+    const rightLegBottom = new SceneNode({
+        buffers: cylinderBuffers,
+        localTransform: {
+            position: [0.02, 0.57, 0.0],
+            rotation: [-0.0, 0.0, -0.33],
+            scale: [0.87, 0.52, 0.98]
+        },
+        color: [0.4, 0.30, 0.60, 1.0]
+    });
+    rightLegTop.addChild(rightLegBottom);
+
+
+    const gengarTailGeometry = createGengarTail(1.25, 1.5, 24, 12, 0.8, 0);
+    const gengarTailBuffers = initBuffers(gl, gengarTailGeometry);
+
+    const tail = new SceneNode({
+        buffers: gengarTailBuffers,
+        localTransform: {
+            // Adjust position to place it correctly on the lower back
+            position: [0.0, -0.75, -0.695],
+            // Adjust rotation to make it point slightly up and back
+            rotation: [-2.2, 3.0, 0.0],
+            // Adjust scale if needed
+            scale: [0.6, 0.7, 0.6]
+        },
+        color: [0.4, 0.30, 0.60, 1.0] // Same color as body
+    });
+    body.addChild(tail);
 
     // camera controls
     let isDragging = false;
     let previousMousePosition = { x: 0, y: 0 };
-    let cameraRotation = { x: 0.35, y: 0.05 };
+    let cameraRotation = { x: 0.0, y: 0 };
     canvas.addEventListener('mousedown', (e) => { isDragging = true; previousMousePosition = { x: e.clientX, y: e.clientY }; });
     canvas.addEventListener('mouseup', () => { isDragging = false; });
     canvas.addEventListener('mousemove', (e) => {
@@ -442,7 +655,78 @@ function main() {
         node.children.forEach(child => renderNode(child, worldMatrix, viewMatrix));
     }
 
-    function render() {
+
+    const initialBodyPos = [...body.localTransform.position];
+    const initialBodyRot = [...body.localTransform.rotation];
+    const initialLeftLegScale = [...leftLegTop.localTransform.scale];
+    const initialRightLegScale = [...rightLegTop.localTransform.scale];
+    const initialLeftArmRot = [...leftArmTop.localTransform.rotation];
+    const initialRightArmRot = [...rightArmTop.localTransform.rotation];
+
+     function render(now) { 
+        now *= 0.001; 
+
+        // --- GENGAR ANIMATION LOGIC ---
+        const speed = 4.0; 
+        const swayMagnitude = 0.2; 
+        const turnMagnitude = 0.25; 
+        const tiltMagnitude = 0.15; 
+        const humpMagnitude = -0.15;
+        const bobMagnitude = 0.05; 
+        const zMoveMagnitude = 0.1; 
+
+        const sway = Math.sin(now * speed); 
+        const absSway = Math.abs(sway); 
+        const swayVelocity = Math.cos(now * speed);
+
+        // 1. X Position (Sway side to side)
+        // body.localTransform.position[0] = initialBodyPos[0] + sway * swayMagnitude;
+        
+        // 2. Y Position (Bob up at the peak of the sway)
+        body.localTransform.position[1] = initialBodyPos[1] + absSway * bobMagnitude;
+        
+        // 3. Z Position (Move forward at the peak of the sway)
+        body.localTransform.position[2] = initialBodyPos[2] + absSway * zMoveMagnitude;
+
+        // 4. X Rotation (Hump/lean forward at the peak of the sway)
+        body.localTransform.rotation[0] = initialBodyRot[0] - absSway * humpMagnitude;
+        
+        // 5. Y Rotation (Turn side to side)
+        body.localTransform.rotation[1] = initialBodyRot[1] + sway * turnMagnitude;
+        
+        // 6. Z Rotation (Tilt side to side)
+        body.localTransform.rotation[2] = initialBodyRot[2] + sway * tiltMagnitude;
+
+        // --- NEW: Animate Legs (Stretch/Squash) ---
+        // We scale the 'Y' axis because that is the "height" of the cylinder
+        // geometry before it gets rotated by the `leftLegTop` node.
+        const legStretchMagnitude = -0.2; // Feel free to tune this value!
+
+        // Left leg: stretches when body moves right (sway > 0)
+        leftLegTop.localTransform.scale[1] = initialLeftLegScale[1] + sway * legStretchMagnitude;
+
+        // Right leg: squashes when body moves right (sway > 0)
+        rightLegTop.localTransform.scale[1] = initialRightLegScale[1] - sway * legStretchMagnitude;
+        const rightArmFlapMag = -0.3; // Flap down
+        const rightArmBounceMag = 0.15;  // Bounce up
+
+        // Left Arm: "down" is positive, "up" is negative
+        const leftArmFlapMag = 0.3;   // Flap down
+        const leftArmBounceMag = -0.15;  // Bounce up
+
+        // 1. Flap (based on position)
+        const rightFlap = Math.max(0, sway) * rightArmFlapMag;
+        const leftFlap = Math.max(0, -sway) * leftArmFlapMag;
+
+        const rightBounce = -swayVelocity * rightArmBounceMag;
+        // Left arm bounces "up" (negative) when returning from left (velocity is positive)
+        const leftBounce = swayVelocity * leftArmBounceMag;
+
+        // 3. Apply both
+        rightArmTop.localTransform.rotation[2] = initialRightArmRot[2] + leftFlap + leftBounce;
+        leftArmTop.localTransform.rotation[2] = initialLeftArmRot[2] + rightFlap + rightBounce;
+
+         // --- END ANIMATION LOGIC ---
         resizeCanvasToDisplaySize(gl.canvas);
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
         gl.clearColor(0.13, 0.08, 0.12, 1.0);
@@ -468,12 +752,11 @@ function main() {
         gl.uniform3fv(programInfo.uniformLocations.viewPosition, cameraPosition);
         
         renderNode(root, null, viewMatrix);
-        
+    	   
         requestAnimationFrame(render);
     }
     requestAnimationFrame(render);
 }
-
 // helper Functions
 function initShaderProgram(gl, vsSource, fsSource) { const vertexShader=loadShader(gl, gl.VERTEX_SHADER, vsSource); const fragmentShader=loadShader(gl, gl.FRAGMENT_SHADER, fsSource); const shaderProgram=gl.createProgram(); gl.attachShader(shaderProgram, vertexShader); gl.attachShader(shaderProgram, fragmentShader); gl.linkProgram(shaderProgram); if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) { alert('Unable to initialize the shader program: ' + gl.getProgramInfoLog(shaderProgram)); return null; } return shaderProgram; }
 function loadShader(gl, type, source) { const shader=gl.createShader(type); gl.shaderSource(shader, source); gl.compileShader(shader); if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) { alert('An error occurred compiling the shaders: ' + gl.getShaderInfoLog(shader)); gl.deleteShader(shader); return null; } return shader; }
@@ -905,6 +1188,183 @@ function createShearedCone(baseRadius, height, shearX, shearZ, segments = 36, st
     return { vertices, normals, indices };
 }
 
+function createSmileMesh(width, height, yOffset, segments) {
+    const vertices = [], normals = [], indices = [];
+    const bodyRadius = 1.0;
+
+    // Shape control
+    const topCurveFactor = -0.6;    // top flatter
+    const bottomCurveFactor = 2.1; // bottom deeper
+    const edgeBoost = 1.0;         // how much sharper near edges
+
+    for (let i = 0; i <= segments; i++) {
+        const t = -1.0 + (2.0 * i / segments); // -1 to 1
+        const x = t * width * 0.5;
+
+        // Use a curve that’s gentle at center, stronger near edges
+        // → behaves like a “smoothstep” curve, not a simple parabola
+        const edgeIntensity = Math.pow(Math.abs(t), 4.5) * edgeBoost + (t * t) * (1.0 - edgeBoost);
+
+        const yBase = yOffset;
+
+        const yTop = yBase + height * 0.5 - (topCurveFactor * edgeIntensity * height * 0.5);
+        const yBottom = yBase - height * 0.2 + (bottomCurveFactor * edgeIntensity * height * 0.5);
+
+        // Project to sphere surface
+        const zTop = Math.sqrt(Math.max(0, bodyRadius * bodyRadius - x * x - yTop * yTop));
+        const zBottom = Math.sqrt(Math.max(0, bodyRadius * bodyRadius - x * x - yBottom * yBottom));
+
+        // Bottom vertex
+        vertices.push(x, yBottom, zBottom);
+        const nBot = [x, yBottom, zBottom];
+        const lenBot = Math.hypot(...nBot) || 1;
+        normals.push(...nBot.map(v => v / lenBot));
+
+        // Top vertex
+        vertices.push(x, yTop, zTop);
+        const nTop = [x, yTop, zTop];
+        const lenTop = Math.hypot(...nTop) || 1;
+        normals.push(...nTop.map(v => v / lenTop));
+    }
+
+    // Indices for triangle strip
+    for (let i = 0; i < segments; i++) {
+        const i1 = i * 2;
+        const i2 = i1 + 1;
+        const i3 = i1 + 2;
+        const i4 = i1 + 3;
+
+        indices.push(i1, i3, i2);
+        indices.push(i2, i3, i4);
+    }
+
+    return { vertices, normals, indices };
+}
+
+
+/**
+ * Creates geometry for Gengar's tail (Revised for better curve).
+ * @param {number} baseRadius - Radius at the attachment point.
+ * @param {number} height - Length of the tail.
+ * @param {number} [segments=24] - Number of divisions around the tail's circumference.
+ * @param {number} [stacks=8] - Number of divisions along the tail's length.
+ * @param {number} [curveAmount=0.4] - How much the tail bends upwards (0 = straight).
+ * @param {number} [tipBluntness=0.1] - Factor controlling how blunt the tip is (0=sharp point, 1=cylinder).
+ * @returns {{vertices: number[], normals: number[], indices: number[]}}
+ */
+function createGengarTail(baseRadius, height, segments = 24, stacks = 8, curveAmount = 0.4, tipBluntness = 0.1) {
+    const vertices = [];
+    const normals = [];
+    const indices = [];
+    const startY = -height / 2; // Position base relative to node origin
+
+    // Base center vertex
+    vertices.push(0, startY, 0);
+    normals.push(0, -1, 0);
+
+    for (let i = 0; i <= stacks; i++) {
+        const t = i / stacks; // Progress along the tail (0=base, 1=tip)
+
+        // --- Calculate radius: Taper quickly ---
+        let radiusFactor = Math.pow(1 - t, 1.8);
+        let r = baseRadius * radiusFactor;
+
+        // --- Calculate Y position with upward curve (REVISED) ---
+        // Using an ease-out curve (cubic) for t affects the *amount* of sine curve applied
+        // This makes the curve bend upwards more strongly towards the tip.
+        const easeOutT = 1 - Math.pow(1 - t, 3);
+        const yCurve = curveAmount * Math.sin(t * Math.PI) * height * 0.7; // Still use sine for the basic shape
+        const currentY = startY + t * height + yCurve * easeOutT; // Apply eased amount
+
+        // --- Calculate Z offset for slight backward curve (Slightly adjusted magnitude) ---
+        const zCurve = -curveAmount * Math.sin(t * Math.PI * 0.5) * height * 0.7; // Slightly increased magnitude
+        const currentZOffset = zCurve * easeOutT; // Also apply ease-out here
+
+        // --- Handle Blunt Tip ---
+        if (i === stacks) {
+            r = Math.max(baseRadius * tipBluntness * 0.2, 0.01);
+        } else if (i === stacks - 1) {
+             r = Math.max(r, baseRadius * tipBluntness * 0.6);
+        }
+
+        // Generate vertices for the current ring
+        for (let j = 0; j <= segments; j++) {
+            const theta = (j / segments) * 2 * Math.PI;
+            const cosTheta = Math.cos(theta);
+            const sinTheta = Math.sin(theta);
+
+            const x = r * cosTheta;
+            const y = currentY;
+            const z = r * sinTheta + currentZOffset;
+
+            vertices.push(x, y, z);
+
+            // --- Approximate Normals (Slightly adjusted for new curve) ---
+            const nextT = Math.min(1, (i + 0.1) / stacks);
+            const nextEaseOutT = 1 - Math.pow(1 - nextT, 3);
+            const nextYCurve = curveAmount * Math.sin(nextT * Math.PI) * height * 0.6;
+            const nextY = startY + nextT * height + nextYCurve * nextEaseOutT;
+            const nextZCurve = -curveAmount * Math.sin(nextT * Math.PI * 0.5) * height * 0.7;
+            const nextZOffset = nextZCurve * nextEaseOutT;
+
+            const tangentY = (nextY - currentY) * 10;
+            const tangentZ = (nextZOffset - currentZOffset) * 10;
+
+            const coneNormalX = cosTheta;
+            const coneNormalY = baseRadius / (height * 1.5);
+            const coneNormalZ = sinTheta;
+
+            let nx = coneNormalX;
+            let ny = coneNormalY + tangentY * 0.3;
+            let nz = coneNormalZ + tangentZ * 0.3;
+
+            if (i > stacks * 0.8) {
+                const tipFactor = (i - stacks * 0.8) / (stacks * 0.2);
+                ny = ny * (1 - tipFactor) + 0.8 * tipFactor;
+            }
+
+            const len = Math.hypot(nx, ny, nz) || 1.0;
+            normals.push(nx / len, ny / len, nz / len);
+        }
+    }
+
+    // --- Generate Indices (Unchanged) ---
+    const baseCenterIndex = 0;
+    const firstRingStartIndex = 1;
+    for (let j = 0; j < segments; j++) {
+        indices.push(baseCenterIndex, firstRingStartIndex + j + 1, firstRingStartIndex + j);
+    }
+    for (let i = 0; i < stacks; i++) {
+        const ring1StartIndex = 1 + i * (segments + 1);
+        const ring2StartIndex = ring1StartIndex + (segments + 1);
+        for (let j = 0; j < segments; j++) {
+            const i1 = ring1StartIndex + j;
+            const i2 = i1 + 1;
+            const i3 = ring2StartIndex + j;
+            const i4 = i3 + 1;
+            indices.push(i1, i3, i2);
+            indices.push(i2, i3, i4);
+        }
+    }
+     const lastRingStartIndex = 1 + stacks * (segments + 1);
+     const tipCenterApproxY = vertices[lastRingStartIndex * 3 + 1]; // Use Y of the first vertex in the last ring
+     const tipCenterApproxZ = vertices[lastRingStartIndex * 3 + 2]; // Use Z of the first vertex in the last ring
+
+     const tipCenterIndex = vertices.length / 3;
+     vertices.push(0, tipCenterApproxY, tipCenterApproxZ); // Place center roughly with the tip ring
+     // Tip normal depends on the final curve tangent - let's average the last ring's normals slightly
+     const avgTipNX = 0;
+     const avgTipNY = 0.8; // Bias upwards
+     const avgTipNZ = -0.2; // Bias slightly backward due to curve
+     const tipNormLen = Math.hypot(avgTipNX, avgTipNY, avgTipNZ) || 1;
+     normals.push(avgTipNX / tipNormLen, avgTipNY / tipNormLen, avgTipNZ / tipNormLen);
+
+     for (let j = 0; j < segments; j++) {
+         indices.push(lastRingStartIndex + j, tipCenterIndex, lastRingStartIndex + j + 1);
+     }
+
+    return { vertices, normals, indices };
+}
 // mat4 functions
 const mat4 = { 
     create: () => { const out = new Float32Array(16); out[0] = 1; out[5] = 1; out[10] = 1; out[15] = 1; return out; },
