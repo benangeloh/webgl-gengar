@@ -58,8 +58,8 @@ const fsSource = `
             finalColor = baseColor * 0.8 + fresnel * fresnelColor * 2.0;
             finalColor += diffuse * baseColor * 0.2; 
         } else {
-            vec3 ambient = vec3(0.2, 0.05, 0.15);
-            vec3 shadowColor = vec3(0.4, 0.1, 0.3);
+            vec3 ambient = vec3(0.2, 0.05, 0.2);
+            vec3 shadowColor = vec3(0.4, 0.2, 0.5);
             vec3 litColor = (ambient + diffuse) * baseColor;
             vec3 shadedColor = shadowColor * baseColor;
             finalColor = mix(shadedColor, litColor, diff);
@@ -67,6 +67,32 @@ const fsSource = `
         }
         
         gl_FragColor = vec4(finalColor, uObjectColor.a);
+    }
+`;
+
+// Skybox shaders
+const sbVsSource = `
+    attribute vec3 aVertexPosition;
+    varying vec3 vTexCoord;
+    uniform mat4 uProjectionMatrix;
+    uniform mat4 uViewMatrix;
+    
+    void main() {
+        vTexCoord = aVertexPosition;
+        // Remove translation from view matrix so skybox stays infinite
+        vec4 pos = uProjectionMatrix * uViewMatrix * vec4(aVertexPosition, 1.0);
+        // Optimization: Force skybox to max depth (z=1.0)
+        gl_Position = pos.xyww; 
+    }
+`;
+
+const sbFsSource = `
+    precision mediump float;
+    varying vec3 vTexCoord;
+    uniform samplerCube uSkybox;
+    
+    void main() {
+        gl_FragColor = textureCube(uSkybox, vTexCoord);
     }
 `;
 
@@ -2078,6 +2104,34 @@ function main() {
     const gl = canvas.getContext("webgl");
     if (!gl) { alert("Unable to initialize WebGL."); return; }
 
+    // Skybox Shader Setup
+    const sbProgram = initShaderProgram(gl, sbVsSource, sbFsSource);
+    const sbInfo = {
+        program: sbProgram,
+        attribs: {
+            position: gl.getAttribLocation(sbProgram, 'aVertexPosition'),
+        },
+        uniforms: {
+            projection: gl.getUniformLocation(sbProgram, 'uProjectionMatrix'),
+            view: gl.getUniformLocation(sbProgram, 'uViewMatrix'),
+            skybox: gl.getUniformLocation(sbProgram, 'uSkybox'),
+        }
+    };
+
+    // Skybox Geometry and Buffers
+    const sbGeom = createSkyboxGeometry();
+    const sbBuffers = {
+        position: gl.createBuffer(),
+        indices: gl.createBuffer(),
+        count: sbGeom.indices.length
+    };
+    gl.bindBuffer(gl.ARRAY_BUFFER, sbBuffers.position);
+    gl.bufferData(gl.ARRAY_BUFFER, sbGeom.vertices, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, sbBuffers.indices);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, sbGeom.indices, gl.STATIC_DRAW);
+
+    const skyboxTexture = loadCubemap(gl);
+    
     // --- Shader Setup (Using Gastly/G-Max shaders with uIsGlowing) ---
     const shaderProgram = initShaderProgram(gl, vsSource, fsSource); // Use Gastly's vs/fsSource
     const programInfo = {
@@ -2208,7 +2262,7 @@ function main() {
     root.addChild(floorNode);
 
     // Add Crystals
-    const glowingCrystalColor = [1.0, 0.4, 0.7, 1.0];
+    const glowingCrystalColor = [1.0, 0.4, 0.8, 1.0];
     // const darkCrystalColor = [0.5, 0.1, 0.3, 1.0];
     // Define placeCluster here or globally
     function placeCluster(clusterPrefab, options) {
@@ -2324,13 +2378,11 @@ function main() {
 
         resizeCanvasToDisplaySize(gl.canvas);
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-        gl.clearColor(0.12, 0.05, 0.09, 1.0);
+        gl.clearColor(0.12, 0.05, 0.09, 1.0); 
         gl.clearDepth(1.0);
         gl.enable(gl.DEPTH_TEST);
-        gl.depthFunc(gl.LEQUAL);
-        gl.disable(gl.BLEND); // Disable blend by default
+        gl.depthFunc(gl.LEQUAL); // important for skybox depth trick
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
 
         // --- Calculate Matrices ---
         const fieldOfView = 45 * Math.PI / 180;
@@ -2338,14 +2390,40 @@ function main() {
         const projectionMatrix = createMat4();
         perspective(projectionMatrix, fieldOfView, aspect, 0.1, 100.0);
 
+        // --- Draw Skybox ---
+        gl.useProgram(sbInfo.program);
+
+        // Create a View Matrix for Skybox (rotation only, hence why skybox stays stationary, no translation)
+        const sbViewMatrix = createMat4();
+        identity(sbViewMatrix);
+        rotateX(sbViewMatrix, sbViewMatrix, cameraRotation.x); 
+        rotateY(sbViewMatrix, sbViewMatrix, cameraRotation.y);
+
+        gl.uniformMatrix4fv(sbInfo.uniforms.projection, false, projectionMatrix);
+        gl.uniformMatrix4fv(sbInfo.uniforms.view, false, sbViewMatrix);
+        
+        gl.bindBuffer(gl.ARRAY_BUFFER, sbBuffers.position);
+        gl.vertexAttribPointer(sbInfo.attribs.position, 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(sbInfo.attribs.position);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, sbBuffers.indices);
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_CUBE_MAP, skyboxTexture);
+        gl.uniform1i(sbInfo.uniforms.skybox, 0);
+
+        // Render settings for Skybox
+        gl.depthMask(false);
+        gl.drawElements(gl.TRIANGLES, sbBuffers.count, gl.UNSIGNED_SHORT, 0);
+        gl.depthMask(true); // Re-enable depth writing for the rest of the scene
+
+
+        // --- Draw Scene ---
+        // Recalculate normal View Matrix (with translation)
         const viewMatrix = createMat4();
         identity(viewMatrix);
-
-        // Apply camera rotation and translation
-        translate(viewMatrix, viewMatrix, [0, 0, -cameraDistance]); // Move back
-        rotateX(viewMatrix, viewMatrix, cameraRotation.x);        // Apply pitch
-        rotateY(viewMatrix, viewMatrix, cameraRotation.y);        // Apply yaw
-
+        translate(viewMatrix, viewMatrix, [0, 0, -cameraDistance]); // return camera
+        rotateX(viewMatrix, viewMatrix, cameraRotation.x);       
+        rotateY(viewMatrix, viewMatrix, cameraRotation.y);
 
         // --- Update Animations ---
         updateGastlyAnimation(now, animationRefs.gastly);
@@ -2475,9 +2553,77 @@ function initBuffers(gl, geometry, usage = gl.STATIC_DRAW) {
     }; 
 }
 
+function loadCubemap(gl) {
+    const texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture);
+
+    const faceInfos = [
+        { target: gl.TEXTURE_CUBE_MAP_POSITIVE_X, url: 'skybox/px.png' },
+        { target: gl.TEXTURE_CUBE_MAP_NEGATIVE_X, url: 'skybox/nx.png' },
+        { target: gl.TEXTURE_CUBE_MAP_POSITIVE_Y, url: 'skybox/py.png' },
+        { target: gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, url: 'skybox/ny.png' },
+        { target: gl.TEXTURE_CUBE_MAP_POSITIVE_Z, url: 'skybox/pz.png' },
+        { target: gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, url: 'skybox/nz.png' },
+    ];
+
+    faceInfos.forEach((face) => {
+        const { target } = face;
+        gl.texImage2D(target, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255]));
+    });
+
+    let imagesLoaded = 0;
+    faceInfos.forEach((face) => {
+        const { target, url } = face;
+        const image = new Image();
+        image.src = url;
+        image.onload = () => {
+            gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture);
+            gl.texImage2D(target, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+            imagesLoaded++;
+            
+            // generate mipmaps once all images are loaded
+            if (imagesLoaded === 6) {
+                gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
+                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+            }
+        };
+    });
+
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+    return texture;
+}
+
 // ============================================
 // GEOMETRY FUNCTIONS
 // ============================================
+
+// 0. Skybox cube
+function createSkyboxGeometry() {
+    const positions = new Float32Array([
+        -1,  1, -1,  -1, -1, -1,   1, -1, -1,   1,  1, -1,
+        -1, -1,  1,  -1, -1, -1,  -1,  1, -1,  -1,  1,  1,
+         1, -1, -1,   1, -1,  1,   1,  1,  1,   1,  1, -1,
+        -1, -1,  1,   1, -1,  1,   1,  1,  1,  -1,  1,  1,
+        -1,  1, -1,   1,  1, -1,   1,  1,  1,  -1,  1,  1,
+        -1, -1, -1,  -1, -1,  1,   1, -1,  1,   1, -1, -1
+    ]);
+    
+    const indices = new Uint16Array([
+        0,  1,  2,  0,  2,  3,    // front
+        4,  5,  6,  4,  6,  7,    // back
+        8,  9, 10,  8, 10, 11,    // top
+        12, 13, 14, 12, 14, 15,   // bot
+        16, 17, 18, 16, 18, 19,   // right
+        20, 21, 22, 20, 22, 23    // left
+    ]);
+    
+    return { vertices: positions, indices: indices };
+}
+
 
 // 1. SPHERE untuk badan Gastly
 function createSphere(radius, latBands, longBands) {
