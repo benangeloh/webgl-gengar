@@ -2099,6 +2099,19 @@ gmaxRefs.tailNode.localTransform.position[2] = gmaxRefs.initialTailTransform.pos
     }
 }
 
+function updateIslandFloating(now, islandNode) {
+    const floatSpeed = 0.5;
+    const floatHeight = 0.3;
+    const tiltSpeed = 0.3;
+    const tiltAngle = 0.1;
+
+    const BaseY = 0;
+    islandNode.localTransform.position[1] = BaseY + Math.sin(now * floatSpeed) * floatHeight;
+
+    islandNode.localTransform.rotation[0] = Math.cos(now * tiltSpeed) * tiltAngle;
+    islandNode.localTransform.rotation[2] = Math.sin(now * tiltSpeed * 0.8) * tiltAngle;
+}
+
 function main() {
     const canvas = document.querySelector("#glcanvas");
     const gl = canvas.getContext("webgl");
@@ -2249,9 +2262,12 @@ function main() {
     buffers.crystal = initBuffers(gl, crystal_Geom);
 
     // ============================================
-    // 3. BUILD SCENE GRAPH using Builder Functions
+    // 3. BUILD SCENE GRAPH 
     // ============================================
     const root = new SceneNode();
+
+    const islandGroup = new SceneNode(); 
+    root.addChild(islandGroup); 
 
     // --- Environment ---
     const floorNode = new SceneNode({
@@ -2259,24 +2275,25 @@ function main() {
         localTransform: { position: [0, -2.1, 0], rotation: [0, 0, 0], scale: [1, 1, 1] },
         color: [0.1, 0.05, 0.15, 1.0]
     });
-    root.addChild(floorNode);
+    islandGroup.addChild(floorNode); 
 
     // Add Crystals
     const glowingCrystalColor = [1.0, 0.4, 0.8, 1.0];
-    // const darkCrystalColor = [0.5, 0.1, 0.3, 1.0];
-    // Define placeCluster here or globally
-    function placeCluster(clusterPrefab, options) {
+    
+    // Updated placeCluster to accept a parent node
+    function placeCluster(clusterPrefab, options, parentNode) {
         const placerNode = new SceneNode({ localTransform: { position: options.position, rotation: options.rotation, scale: options.scale } });
-        // Pass the specific crystal buffer here
         const cluster = clusterPrefab({ crystalBuffers: buffers.crystal, color: options.color, glowing: options.glowing });
         placerNode.addChild(cluster);
-        root.addChild(placerNode);
+        parentNode.addChild(placerNode);
     }
-    placeCluster(createCrystalClusterA, { position: [-5, -2.0, -8], rotation: [0, 0.5, 0], scale: [1.2, 1.2, 1.2], glowing: true, color: glowingCrystalColor });
-    placeCluster(createCrystalClusterB, { position: [-10, -2.1, -2], rotation: [0, 1.2, 0], scale: [1.0, 1.5, 1.0], glowing: true, color: glowingCrystalColor });
-    placeCluster(createCrystalClusterB, { position: [6, -1.9, -6], rotation: [0, -0.8, 0], scale: [1.5, 1.8, 1.5], glowing: true, color: glowingCrystalColor });
-    placeCluster(createCrystalClusterA, { position: [11, -2.0, 0], rotation: [0, -1.5, 0], scale: [0.9, 1.1, 0.9], glowing: true, color: glowingCrystalColor });
-    placeCluster(createCrystalClusterB, { position: [2, -2.1, -10], rotation: [0, 0.1, 0], scale: [2.0, 2.5, 2.0], glowing: true, color: glowingCrystalColor });
+
+    // Pass 'islandGroup' as the parent for all crystals
+    placeCluster(createCrystalClusterA, { position: [-5, -2.0, -8], rotation: [0, 0.5, 0], scale: [1.2, 1.2, 1.2], glowing: true, color: glowingCrystalColor }, islandGroup);
+    placeCluster(createCrystalClusterB, { position: [-10, -2.1, -2], rotation: [0, 1.2, 0], scale: [1.0, 1.5, 1.0], glowing: true, color: glowingCrystalColor }, islandGroup);
+    placeCluster(createCrystalClusterB, { position: [6, -1.9, -6], rotation: [0, -0.8, 0], scale: [1.5, 1.8, 1.5], glowing: true, color: glowingCrystalColor }, islandGroup);
+    placeCluster(createCrystalClusterA, { position: [11, -2.0, 0], rotation: [0, -1.5, 0], scale: [0.9, 1.1, 0.9], glowing: true, color: glowingCrystalColor }, islandGroup);
+    placeCluster(createCrystalClusterB, { position: [2, -2.1, -10], rotation: [0, 0.1, 0], scale: [2.0, 2.5, 2.0], glowing: true, color: glowingCrystalColor }, islandGroup);
 
     // --- Create Pokémon Models ---
     const gastlyData = createGastlyNode(buffers);
@@ -2291,26 +2308,25 @@ function main() {
     gengarData.modelRoot.localTransform.position = [-6.5, -0.15, 0];
     gengarData.modelRoot.localTransform.rotation = [0, -0.1, 0];
     gigantamaxData.modelRoot.localTransform.position = [0, -2, -1];
-    // gigantamaxData.modelRoot.localTransform.scale = [1.5, 1.5, 1.5]; // Optional
 
     gastlyData.initials.bodyPos = [...gastlyData.modelRoot.localTransform.position];
     gengarData.initials.bodyPos = [...gengarData.modelRoot.localTransform.position];
     gengarData.initials.bodyRot = [...gengarData.modelRoot.localTransform.rotation];
 
     // --- Add Pokémon to Scene ---
-    root.addChild(gastlyData.modelRoot);
-    root.addChild(haunterData.modelRoot);
-    root.addChild(gengarData.modelRoot);
-    root.addChild(gigantamaxData.modelRoot);
+    islandGroup.addChild(gastlyData.modelRoot);     
+    islandGroup.addChild(haunterData.modelRoot);    
+    islandGroup.addChild(gengarData.modelRoot);     
+    islandGroup.addChild(gigantamaxData.modelRoot); 
 
     // ============================================
     // 4. CAMERA CONTROLS & RENDER LOOP
     // ============================================
     let isDragging = false;
-    let cameraRotation = { x: 0.1, y: 0.0 };
+    let cameraRotation = { x: 0.1, y: 0.0, z: 0.0 };
     let cameraDistance = 42.0;
-    canvas.addEventListener('mousedown', (e) => { isDragging = true; previousMousePosition = { x: e.clientX, y: e.clientY }; canvas.style.cursor = 'grabbing'; });
-    window.addEventListener('mouseup', () => { isDragging = false; canvas.style.cursor = 'grab'; });
+    canvas.addEventListener('mousedown', (e) => { isDragging = true; previousMousePosition = { x: e.clientX, y: e.clientY }; canvas.style.cursor = 'none'; });
+    window.addEventListener('mouseup', () => { isDragging = false; canvas.style.cursor = 'none'; });
     window.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
         const deltaX = e.clientX - previousMousePosition.x;
@@ -2323,8 +2339,65 @@ function main() {
     canvas.addEventListener('wheel', (e) => {
         e.preventDefault();
         cameraDistance += e.deltaY * 0.02; // Adjust sensitivity
-        cameraDistance = Math.max(3.0, Math.min(60.0, cameraDistance)); // Clamp zoom
+        cameraDistance = Math.max(3.0, Math.min(80.0, cameraDistance)); // Clamp zoom
     }, { passive: false });
+
+    window.addEventListener('keydown', (e) => {
+        const zoomSpeed = 0.05;   
+        
+        const rotateSpeed = 0.0025;
+
+        switch (e.key) {
+            case 'ArrowUp':
+                cameraDistance -= zoomSpeed;
+                cameraRotation.x += rotateSpeed;
+                break;
+            case 'ArrowDown':
+                cameraDistance += zoomSpeed;
+                cameraRotation.x -= rotateSpeed;
+                break;
+
+            case 'w':
+            case 'W':
+                cameraRotation.x -= rotateSpeed;
+                
+                break;
+            case 's':
+            case 'S':
+                cameraRotation.x += rotateSpeed;
+                cameraDistance += zoomSpeed;
+                break;
+
+            case 'a':
+            case 'A':
+            case 'ArrowLeft':
+                cameraDistance -= zoomSpeed;
+                cameraRotation.y -= rotateSpeed;
+                cameraRotation.x += rotateSpeed;
+                break;
+            case 'd':
+            case 'D':
+            case 'ArrowRight':
+                // cameraDistance += zoomSpeed;
+                cameraRotation.y += rotateSpeed;
+                break;
+
+            case 'q':
+            case 'Q':
+                cameraRotation.z += rotateSpeed;
+                cameraRotation.x -= rotateSpeed;
+                break;
+            case 'e':
+            case 'E':
+                cameraRotation.z -= rotateSpeed;
+                cameraRotation.x += rotateSpeed;
+                break;
+        }
+
+        cameraDistance = Math.max(3.0, Math.min(80.0, cameraDistance));
+        
+        // cameraRotation.x = Math.max(-1.5, Math.min(1.5, cameraRotation.x));
+    });
 
     function renderNode(node, parentWorldMatrix, viewMatrix) {
         const worldMatrix = node.getWorldMatrix(parentWorldMatrix);
@@ -2398,6 +2471,7 @@ function main() {
         identity(sbViewMatrix);
         rotateX(sbViewMatrix, sbViewMatrix, cameraRotation.x); 
         rotateY(sbViewMatrix, sbViewMatrix, cameraRotation.y);
+        rotateZ(sbViewMatrix, sbViewMatrix, cameraRotation.z);
 
         gl.uniformMatrix4fv(sbInfo.uniforms.projection, false, projectionMatrix);
         gl.uniformMatrix4fv(sbInfo.uniforms.view, false, sbViewMatrix);
@@ -2424,12 +2498,14 @@ function main() {
         translate(viewMatrix, viewMatrix, [0, 0, -cameraDistance]); // return camera
         rotateX(viewMatrix, viewMatrix, cameraRotation.x);       
         rotateY(viewMatrix, viewMatrix, cameraRotation.y);
+        rotateZ(viewMatrix, viewMatrix, cameraRotation.z);
 
         // --- Update Animations ---
         updateGastlyAnimation(now, animationRefs.gastly);
         updateHaunterAnimation(now, animationRefs.haunter);
         updateGengarAnimation(now, animationRefs.gengar);
         updateGigantamaxAnimation(now, animationRefs.gigantamax, gl, buffers);
+        updateIslandFloating(now, islandGroup);
 
         // --- Draw Scene ---
         gl.useProgram(programInfo.program);
